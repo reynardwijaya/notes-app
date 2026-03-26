@@ -6,48 +6,40 @@ import {
   Box,
   Button,
   CircularProgress,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
   TextField,
   Typography,
 } from "@mui/material";
-import { createClient } from "@/lib/supabase/client";
+import { createNote, type CreatedNote } from "@/app/actions/createNote";
 
-export type NoteRow = {
+export type NoteRow = CreatedNote;
+
+export type NoteCategory = {
   id: string;
-  title: string;
-  content: string;
-  user_id: string;
-  created_at: string;
-  category_id?: string | null;
-};
-
-export type NoteInsert = {
-  title: string;
-  content: string;
-  user_id: string;
+  name: string;
 };
 
 type Props = {
-  userId: string;
+  categories: NoteCategory[];
   onCancel?: () => void;
   onCreated?: (note: NoteRow) => void;
-  onError?: (message: string) => void;
 };
 
 export default function CreateNoteForm({
-  userId,
+  categories,
   onCancel,
   onCreated,
-  onError,
 }: Props) {
-  const supabase = useMemo(() => createClient(), []);
-
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [categoryId, setCategoryId] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
-  const canSubmit =
-    !submitting && userId.trim().length > 0 && title.trim() && content.trim();
+  const canSubmit = !submitting && title.trim() && content.trim() && categoryId;
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -56,47 +48,34 @@ export default function CreateNoteForm({
     const trimmedTitle = title.trim();
     const trimmedContent = content.trim();
 
-    if (!userId) {
-      setFormError("You must be signed in to create a note.");
-      return;
-    }
-
     if (!trimmedTitle || !trimmedContent) {
       setFormError("Title and content are required.");
       return;
     }
 
+    if (!categoryId) {
+      setFormError("Category is required.");
+      return;
+    }
+
     setSubmitting(true);
     try {
-      const payload: NoteInsert = {
+      const res = await createNote({
         title: trimmedTitle,
         content: trimmedContent,
-        user_id: userId,
-      };
+        categoryId,
+      });
 
-      const { data, error } = await supabase
-        .from("notes")
-        .insert(payload)
-        .select("*")
-        .single<NoteRow>();
-
-      if (error) {
-        setFormError(error.message || "Failed to create note.");
-        onError?.(error.message || "Failed to create note.");
+      if ("error" in res) {
+        setFormError(res.error);
         return;
       }
 
-      if (!data) {
-        setFormError("Failed to create note.");
-        onError?.("Failed to create note.");
-        return;
-      }
-
-      onCreated?.(data);
+      onCreated?.(res.note);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to create note.";
+      const message =
+        err instanceof Error ? err.message : "Failed to create note.";
       setFormError(message);
-      onError?.(message);
     } finally {
       setSubmitting(false);
     }
@@ -135,6 +114,26 @@ export default function CreateNoteForm({
           "& .MuiOutlinedInput-root": { borderRadius: 2.5 },
         }}
       />
+
+      <FormControl fullWidth required>
+        <InputLabel id="category-label">Category</InputLabel>
+        <Select
+          labelId="category-label"
+          label="Category"
+          value={categoryId}
+          onChange={(e) => setCategoryId(String(e.target.value))}
+          sx={{
+            borderRadius: 2.5,
+            "& .MuiOutlinedInput-notchedOutline": { borderRadius: 2.5 },
+          }}
+        >
+          {categories.map((cat) => (
+            <MenuItem key={cat.id} value={cat.id}>
+              {cat.name}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
 
       <TextField
         label="Content"
