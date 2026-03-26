@@ -13,6 +13,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
 import { createNote, type CreatedNote } from "@/app/actions/createNote";
 
 export type NoteRow = CreatedNote;
@@ -26,12 +27,14 @@ type Props = {
   categories: NoteCategory[];
   onCancel?: () => void;
   onCreated?: (note: NoteRow) => void;
+  onOpenCategoryModal?: () => void;
 };
 
 export default function CreateNoteForm({
   categories,
   onCancel,
   onCreated,
+  onOpenCategoryModal,
 }: Props) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -134,6 +137,25 @@ export default function CreateNoteForm({
           ))}
         </Select>
       </FormControl>
+      <Box sx={{ display: "flex", justifyContent: "space-between", mt: -0.5 }}>
+        <Typography variant="caption" sx={{ color: "text.secondary" }}>
+          Select one category for this note.
+        </Typography>
+        <Button
+          type="button"
+          size="small"
+          startIcon={<AddIcon fontSize="small" />}
+          onClick={onOpenCategoryModal}
+          sx={{
+            textTransform: "none",
+            minHeight: 24,
+            borderRadius: 1.5,
+            px: 1,
+          }}
+        >
+          Create Category
+        </Button>
+      </Box>
 
       <TextField
         label="Content"

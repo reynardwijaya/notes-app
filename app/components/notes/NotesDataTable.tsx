@@ -11,6 +11,7 @@ import {
   Alert,
   Box,
   Button,
+  Chip,
   Dialog,
   DialogContent,
   DialogTitle,
@@ -28,13 +29,17 @@ import {
   Typography,
 } from "@mui/material";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import CloseIcon from "@mui/icons-material/Close";
+import CategoryOutlinedIcon from "@mui/icons-material/CategoryOutlined";
 
 import { getNotes, type NoteWithCategory } from "@/app/actions/getNotes";
 import { deleteNote } from "@/app/actions/deleteNote";
 import CreateNoteForm, {
   type NoteCategory,
 } from "@/app/components/notes/CreateNoteForm";
+import CreateCategoryModal from "@/app/components/notes/CreateCategoryModal";
+import ConfirmationModal from "@/app/components/notes/ConfirmationModal";
 
 type Props = {
   initialData: NoteWithCategory[];
@@ -60,13 +65,17 @@ export default function NotesDataTable({
 }: Props) {
   const [data, setData] = useState<NoteWithCategory[]>(initialData);
   const [total, setTotal] = useState(initialTotal);
+  const [categoriesState, setCategoriesState] = useState<NoteCategory[]>(categories);
 
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(initialPageSize);
   const [search, setSearch] = useState("");
 
   const [loading, setLoading] = useState(false);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [noteModalOpen, setNoteModalOpen] = useState(false);
+  const [categoryModalOpen, setCategoryModalOpen] = useState(false);
+  const [noteToDelete, setNoteToDelete] = useState<NoteWithCategory | null>(null);
+  const [deletingNote, setDeletingNote] = useState(false);
 
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
@@ -119,7 +128,16 @@ export default function NotesDataTable({
         accessorKey: "title",
         header: "Title",
         cell: (info) => (
-          <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+          <Typography
+            variant="subtitle2"
+            sx={{
+              fontWeight: 700,
+              maxWidth: 280,
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
             {String(info.getValue() ?? "")}
           </Typography>
         ),
@@ -128,16 +146,22 @@ export default function NotesDataTable({
         accessorKey: "category_name",
         header: "Category",
         cell: (info) => (
-          <Typography variant="body2" sx={{ color: "text.secondary" }}>
-            {String(info.getValue() ?? "")}
-          </Typography>
+          <Chip
+            label={String(info.getValue() ?? "Uncategorized")}
+            size="small"
+            sx={{
+              borderRadius: 1.5,
+              bgcolor: "grey.100",
+              "& .MuiChip-label": { px: 1, fontSize: 12 },
+            }}
+          />
         ),
       },
       {
         accessorKey: "created_at",
         header: "Created At",
         cell: (info) => (
-          <Typography variant="body2" sx={{ color: "text.secondary" }}>
+          <Typography variant="caption" sx={{ color: "text.secondary" }}>
             {formatCreatedAt(String(info.getValue() ?? ""))}
           </Typography>
         ),
@@ -146,18 +170,17 @@ export default function NotesDataTable({
         id: "actions",
         header: () => <Box sx={{ textAlign: "right", pr: 1 }}>Actions</Box>,
         cell: ({ row }) => (
-          <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+          <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 0.5 }}>
+            <IconButton
+              aria-label="Edit note"
+              size="small"
+              sx={{ color: "text.secondary" }}
+            >
+              <EditOutlinedIcon fontSize="small" />
+            </IconButton>
             <IconButton
               aria-label="Delete note"
-              onClick={async () => {
-                const res = await deleteNote({ id: row.original.id });
-                if ("error" in res) {
-                  showToast(res.error, "error");
-                  return;
-                }
-                showToast("Note deleted", "success");
-                await refetch({ pageIndex, pageSize, search });
-              }}
+              onClick={() => setNoteToDelete(row.original)}
               size="small"
               sx={{ color: "error.main" }}
             >
@@ -191,44 +214,68 @@ export default function NotesDataTable({
           placeholder="Search notes…"
           size="small"
           sx={{
-            maxWidth: 520,
+            maxWidth: 460,
             "& .MuiOutlinedInput-root": { borderRadius: 2.5 },
           }}
         />
 
-        <Button
-          variant="contained"
-          disableElevation
-          onClick={() => setModalOpen(true)}
-          sx={{
-            textTransform: "none",
-            borderRadius: 2,
-            px: 2.5,
-            py: 1,
-            boxShadow: "0 10px 22px rgba(0,0,0,0.10)",
-            flexShrink: 0,
-          }}
-        >
-          Add Note
-        </Button>
+        <Box sx={{ display: "flex", gap: 1, flexShrink: 0 }}>
+          <Button
+            variant="outlined"
+            startIcon={<CategoryOutlinedIcon fontSize="small" />}
+            onClick={() => setCategoryModalOpen(true)}
+            sx={{
+              textTransform: "none",
+              borderRadius: 2,
+              px: 1.5,
+              minWidth: "auto",
+            }}
+          >
+            Create Category
+          </Button>
+          <Button
+            variant="contained"
+            disableElevation
+            onClick={() => setNoteModalOpen(true)}
+            sx={{
+              textTransform: "none",
+              borderRadius: 2,
+              px: 2,
+              boxShadow: "0 8px 18px rgba(0,0,0,0.08)",
+            }}
+          >
+            Add Note
+          </Button>
+        </Box>
       </Box>
 
       <Paper
         elevation={0}
         sx={{
-          borderRadius: 3,
+          maxWidth: 980,
+          borderRadius: 2,
           border: "1px solid",
           borderColor: "divider",
           overflow: "hidden",
+          boxShadow: "0 8px 24px rgba(15,23,42,0.05)",
         }}
       >
         <TableContainer>
-          <Table size="medium">
+          <Table size="small">
             <TableHead>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <TableCell key={header.id} sx={{ fontWeight: 700 }}>
+                  {headerGroup.headers.map((header, index) => (
+                    <TableCell
+                      key={header.id}
+                      sx={{
+                        fontWeight: 700,
+                        py: 1.25,
+                        ...(index === headerGroup.headers.length - 1
+                          ? { textAlign: "right", pr: 2 }
+                          : {}),
+                      }}
+                    >
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -245,7 +292,7 @@ export default function NotesDataTable({
               {loading ? (
                 <TableRow>
                   <TableCell colSpan={columns.length}>
-                    <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                    <Typography variant="body2" sx={{ color: "text.secondary", py: 1 }}>
                       Loading…
                     </Typography>
                   </TableCell>
@@ -253,7 +300,7 @@ export default function NotesDataTable({
               ) : data.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={columns.length}>
-                    <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                    <Typography variant="body2" sx={{ color: "text.secondary", py: 1 }}>
                       No notes found.
                     </Typography>
                   </TableCell>
@@ -261,8 +308,16 @@ export default function NotesDataTable({
               ) : (
                 table.getRowModel().rows.map((row) => (
                   <TableRow key={row.id} hover>
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
+                    {row.getVisibleCells().map((cell, index) => (
+                      <TableCell
+                        key={cell.id}
+                        sx={{
+                          py: 1,
+                          ...(index === row.getVisibleCells().length - 1
+                            ? { textAlign: "right", pr: 2 }
+                            : {}),
+                        }}
+                      >
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext()
@@ -292,14 +347,14 @@ export default function NotesDataTable({
       </Paper>
 
       <Dialog
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
+        open={noteModalOpen}
+        onClose={() => setNoteModalOpen(false)}
         fullWidth
         maxWidth="sm"
         PaperProps={{
           sx: {
-            borderRadius: 4,
-            boxShadow: "0 30px 80px rgba(0,0,0,0.22)",
+            borderRadius: 2,
+            boxShadow: "0 18px 48px rgba(15,23,42,0.16)",
           },
         }}
       >
@@ -307,37 +362,67 @@ export default function NotesDataTable({
           Create Note
           <IconButton
             aria-label="Close"
-            onClick={() => setModalOpen(false)}
+            onClick={() => setNoteModalOpen(false)}
             sx={{ position: "absolute", right: 12, top: 12 }}
           >
             <CloseIcon fontSize="small" />
           </IconButton>
         </DialogTitle>
         <DialogContent sx={{ pt: 2.5 }}>
-          {categories.length === 0 ? (
-            <Alert severity="warning" sx={{ borderRadius: 2 }}>
-              No categories found. Please create a category first.
-            </Alert>
-          ) : (
-            <CreateNoteForm
-              categories={categories}
-              onCancel={() => setModalOpen(false)}
-              onCreated={async (created) => {
-                setModalOpen(false);
-                showToast("Note created successfully", "success");
+          <CreateNoteForm
+            categories={categoriesState}
+            onOpenCategoryModal={() => setCategoryModalOpen(true)}
+            onCancel={() => setNoteModalOpen(false)}
+            onCreated={async (created) => {
+              setNoteModalOpen(false);
+              showToast("Note created successfully", "success");
 
-                if (pageIndex === 0 && search.trim() === "") {
-                  setData((prev) => [created, ...prev].slice(0, pageSize));
-                  setTotal((t) => t + 1);
-                  return;
-                }
+              if (pageIndex === 0 && search.trim() === "") {
+                setData((prev) => [created, ...prev].slice(0, pageSize));
+                setTotal((t) => t + 1);
+                return;
+              }
 
-                await refetch({ pageIndex, pageSize, search });
-              }}
-            />
-          )}
+              await refetch({ pageIndex, pageSize, search });
+            }}
+          />
         </DialogContent>
       </Dialog>
+
+      <CreateCategoryModal
+        open={categoryModalOpen}
+        categories={categoriesState}
+        onClose={() => setCategoryModalOpen(false)}
+        onCategoriesUpdated={(next) => setCategoriesState(next)}
+        onSuccessMessage={(m) => showToast(m, "success")}
+        onErrorMessage={(m) => showToast(m, "error")}
+      />
+
+      <ConfirmationModal
+        open={Boolean(noteToDelete)}
+        onClose={() => setNoteToDelete(null)}
+        title="Delete Note?"
+        subtitle="This action cannot be undone"
+        confirmText="Delete"
+        confirmColor="error"
+        loading={deletingNote}
+        onConfirm={async () => {
+          if (!noteToDelete) return;
+          setDeletingNote(true);
+          try {
+            const res = await deleteNote({ id: noteToDelete.id });
+            if ("error" in res) {
+              showToast(res.error, "error");
+              return;
+            }
+            showToast("Note deleted", "success");
+            setNoteToDelete(null);
+            await refetch({ pageIndex, pageSize, search });
+          } finally {
+            setDeletingNote(false);
+          }
+        }}
+      />
 
       <Snackbar
         open={snackbarOpen}
