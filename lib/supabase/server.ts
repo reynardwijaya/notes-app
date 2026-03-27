@@ -3,7 +3,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-// reusable server client
+// Reusable server client for Server Components + Server Actions
 export async function createClient() {
   const cookieStore = await cookies();
 
@@ -12,7 +12,19 @@ export async function createClient() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get: (name) => cookieStore.get(name)?.value,
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
+          } catch {
+            // When called from a Server Component, cookie writes can be blocked.
+            // Server Actions and Route Handlers can write cookies.
+          }
+        },
       },
     },
   );
