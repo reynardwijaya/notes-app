@@ -1,9 +1,8 @@
 import AppLayout from "@/app/components/layout/AppLayout";
-import NotesDataTable from "@/app/components/notes/NotesDataTable";
 import { getNotes } from "@/app/(dashboard)/actions/notes/getNotes";
 import { getCategories } from "@/lib/categories/getCategories";
 import { createClient } from "@/lib/supabase/server";
-import CategoryFolderPanel from "@/app/components/notes/CategoryFolderPanel";
+import NotesDashboardShell from "@/app/components/notes/NotesDashboardShell";
 
 interface UserRole {
   role: "user" | "admin";
@@ -37,30 +36,7 @@ export default async function NotesPage() {
 
   return (
     <AppLayout pageTitle="My Notes" userEmail={userEmail} role={role}>
-      <div className="w-full">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          <div className="lg:col-span-6">
-            <NotesDataTable
-              initialData={data}
-              initialTotal={total}
-              categories={categories.map((c) => ({ id: c.id, name: c.name }))}
-              initialPageSize={10}
-            />
-          </div>
-
-          <div className="lg:col-span-6">
-            <CategoryFolderPanel
-              categories={categories.map((c) => ({
-                id: c.id,
-                name: c.name,
-                created_at: c.created_at,
-              }))}
-              notesInitialData={[]}
-              notesInitialTotal={0}
-            />
-          </div>
-        </div>
-      </div>
+      <NotesDashboardShell initialData={data} initialTotal={total} categories={categories} />
     </AppLayout>
   );
 }

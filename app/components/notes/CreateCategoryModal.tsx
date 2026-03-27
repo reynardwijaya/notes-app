@@ -150,8 +150,8 @@ export default function CreateCategoryModal({
                           borderColor: color.border,
                           "& .MuiChip-label": { px: 1.25, fontWeight: 700 },
                           "& .MuiChip-deleteIcon": {
-                            color: "#B91C1C",
-                            "&:hover": { color: "#7F1D1D" },
+                            color: "rgba(55,65,81,0.72)",
+                            "&:hover": { color: "rgba(185,28,28,0.72)" },
                           },
                           "&:hover": {
                             bgcolor: color.bg,

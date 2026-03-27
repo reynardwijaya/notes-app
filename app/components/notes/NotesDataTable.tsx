@@ -52,6 +52,14 @@ type Props = {
   initialPageSize?: number;
   lockedCategoryId?: string;
   hideTopActions?: boolean;
+  hideToolbar?: boolean;
+  search?: string;
+  fromDate?: string;
+  toDate?: string;
+  openCreateNoteSignal?: number;
+  openCategoryModalSignal?: number;
+  recentlyDeletedCategoryId?: string | null;
+  onCategoriesUpdated?: (categories: NoteCategory[]) => void;
 };
 
 function formatCreatedAt(value: string) {
@@ -70,6 +78,14 @@ export default function NotesDataTable({
   initialPageSize = 10,
   lockedCategoryId,
   hideTopActions = false,
+  hideToolbar = false,
+  search: searchProp,
+  fromDate: fromDateProp,
+  toDate: toDateProp,
+  openCreateNoteSignal,
+  openCategoryModalSignal,
+  recentlyDeletedCategoryId,
+  onCategoriesUpdated,
 }: Props) {
   const [data, setData] = useState<NoteWithCategory[]>(initialData);
   const [total, setTotal] = useState(initialTotal);
@@ -77,9 +93,9 @@ export default function NotesDataTable({
 
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(initialPageSize);
-  const [search, setSearch] = useState("");
-  const [fromDate, setFromDate] = useState<string>("");
-  const [toDate, setToDate] = useState<string>("");
+  const [search, setSearch] = useState(searchProp ?? "");
+  const [fromDate, setFromDate] = useState<string>(fromDateProp ?? "");
+  const [toDate, setToDate] = useState<string>(toDateProp ?? "");
 
   const [loading, setLoading] = useState(false);
   const [noteModalOpen, setNoteModalOpen] = useState(false);
@@ -100,6 +116,54 @@ export default function NotesDataTable({
     () => buildCategoryColorIndex(categoriesState),
     [categoriesState]
   );
+
+  useEffect(() => {
+    setCategoriesState(categories);
+  }, [categories]);
+
+  useEffect(() => {
+    if (typeof searchProp === "string") {
+      setSearch(searchProp);
+      setPageIndex(0);
+    }
+  }, [searchProp]);
+
+  useEffect(() => {
+    if (typeof fromDateProp === "string") {
+      setFromDate(fromDateProp);
+      setPageIndex(0);
+    }
+  }, [fromDateProp]);
+
+  useEffect(() => {
+    if (typeof toDateProp === "string") {
+      setToDate(toDateProp);
+      setPageIndex(0);
+    }
+  }, [toDateProp]);
+
+  useEffect(() => {
+    if (typeof openCreateNoteSignal === "number") {
+      setNoteModalOpen(true);
+    }
+  }, [openCreateNoteSignal]);
+
+  useEffect(() => {
+    if (typeof openCategoryModalSignal === "number") {
+      setCategoryModalOpen(true);
+    }
+  }, [openCategoryModalSignal]);
+
+  useEffect(() => {
+    if (!recentlyDeletedCategoryId) return;
+    setData((prev) =>
+      prev.map((note) =>
+        note.category_id === recentlyDeletedCategoryId
+          ? { ...note, category_id: "", category_name: "Uncategorized" }
+          : note
+      )
+    );
+  }, [recentlyDeletedCategoryId]);
 
   const showToast = useCallback((message: string, severity: "success" | "error") => {
     setSnackbarMessage(message);
@@ -249,7 +313,8 @@ export default function NotesDataTable({
 
   return (
     <Box className="space-y-6">
-      <Box className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+      {!hideToolbar && (
+        <Box className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <Box className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <TextField
             fullWidth
@@ -335,12 +400,14 @@ export default function NotesDataTable({
             </Button>
           </Box>
         )}
-      </Box>
+        </Box>
+      )}
 
       <Paper
         elevation={0}
         sx={{
           width: "100%",
+          height: "100%",
           borderRadius: 2,
           border: "1px solid",
           borderColor: "divider",
@@ -548,7 +615,23 @@ export default function NotesDataTable({
         open={categoryModalOpen}
         categories={categoriesState}
         onClose={() => setCategoryModalOpen(false)}
-        onCategoriesUpdated={(next) => setCategoriesState(next)}
+        onCategoriesUpdated={(next) => {
+          const prevIds = new Set(categoriesState.map((c) => c.id));
+          const nextIds = new Set(next.map((c) => c.id));
+          const removedIds = [...prevIds].filter((id) => !nextIds.has(id));
+
+          setCategoriesState(next);
+          onCategoriesUpdated?.(next);
+          if (removedIds.length > 0) {
+            setData((prev) =>
+              prev.map((note) =>
+                removedIds.includes(note.category_id)
+                  ? { ...note, category_id: "", category_name: "Uncategorized" }
+                  : note
+              )
+            );
+          }
+        }}
         onSuccessMessage={(m) => showToast(m, "success")}
         onErrorMessage={(m) => showToast(m, "error")}
       />
