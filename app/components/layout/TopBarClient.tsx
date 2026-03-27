@@ -1,6 +1,6 @@
 "use client";
 
-import { logout } from "@/app/actions/logout/logout-acc";
+import { logout } from "@/app/actions/logout";
 import { Button } from "@mui/material";
 
 interface TopBarProps {

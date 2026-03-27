@@ -14,10 +14,10 @@ import {
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 
-import { createCategory } from "@/app/actions/createCategory";
-import { deleteCategory } from "@/app/actions/deleteCategory";
+import { createCategory } from "@/app/(dashboard)/actions/categories/createCategory";
+import { deleteCategory } from "@/app/(dashboard)/actions/categories/deleteCategory";
 import ConfirmationModal from "@/app/components/notes/ConfirmationModal";
-import type { NoteCategory } from "@/app/components/notes/CreateNoteForm";
+import type { NoteCategory } from "@/app/(dashboard)/actions/notes/types";
 
 type Props = {
   open: boolean;

@@ -1,7 +1,9 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import type { CategoryItem } from "@/app/actions/createCategory";
+import type { CategoryItem } from "@/app/(dashboard)/actions/categories/types";
+
+type CategorySelectRow = { id: string; name: string | null };
 
 async function getUserCategories(userId: string): Promise<CategoryItem[]> {
   const supabase = await createClient();
@@ -9,13 +11,14 @@ async function getUserCategories(userId: string): Promise<CategoryItem[]> {
     .from("note_categories")
     .select("id,name")
     .eq("user_id", userId)
-    .order("name", { ascending: true });
+    .order("name", { ascending: true })
+    .returns<CategorySelectRow[]>();
 
   if (error) throw new Error(error.message);
 
   return (data ?? []).map((row) => ({
-    id: String((row as any).id),
-    name: String((row as any).name ?? ""),
+    id: String(row.id),
+    name: String(row.name ?? ""),
   }));
 }
 

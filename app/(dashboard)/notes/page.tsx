@@ -1,6 +1,6 @@
 import AppLayout from "@/app/components/layout/AppLayout";
 import NotesDataTable from "@/app/components/notes/NotesDataTable";
-import { getNotes } from "@/app/actions/getNotes";
+import { getNotes } from "@/app/(dashboard)/actions/notes/getNotes";
 import { getCategories } from "@/lib/categories/getCategories";
 import { createClient } from "@/lib/supabase/server";
 

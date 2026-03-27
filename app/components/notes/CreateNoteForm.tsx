@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Alert,
   Box,
@@ -14,35 +14,46 @@ import {
   Typography,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import { createNote, type CreatedNote } from "@/app/actions/createNote";
-
-export type NoteRow = CreatedNote;
-
-export type NoteCategory = {
-  id: string;
-  name: string;
-};
+import { createNote } from "@/app/(dashboard)/actions/notes/createNote";
+import type {
+  NoteCategory,
+  NoteSaveInput,
+  NoteSaveResult,
+  NoteWithCategory,
+} from "@/app/(dashboard)/actions/notes/types";
 
 type Props = {
   categories: NoteCategory[];
+  initialValues?: Partial<NoteSaveInput>;
   onCancel?: () => void;
-  onCreated?: (note: NoteRow) => void;
+  onSaved?: (note: NoteWithCategory) => void;
   onOpenCategoryModal?: () => void;
+  submitAction?: (input: NoteSaveInput) => Promise<NoteSaveResult>;
+  submitLabel?: string;
 };
 
 export default function CreateNoteForm({
   categories,
+  initialValues,
   onCancel,
-  onCreated,
+  onSaved,
   onOpenCategoryModal,
+  submitAction,
+  submitLabel = "Create note",
 }: Props) {
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [categoryId, setCategoryId] = useState("");
+  const [title, setTitle] = useState(initialValues?.title ?? "");
+  const [content, setContent] = useState(initialValues?.content ?? "");
+  const [categoryId, setCategoryId] = useState(initialValues?.categoryId ?? "");
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
   const canSubmit = !submitting && title.trim() && content.trim() && categoryId;
+
+  useEffect(() => {
+    setTitle(initialValues?.title ?? "");
+    setContent(initialValues?.content ?? "");
+    setCategoryId(initialValues?.categoryId ?? "");
+  }, [initialValues?.title, initialValues?.content, initialValues?.categoryId]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -63,7 +74,8 @@ export default function CreateNoteForm({
 
     setSubmitting(true);
     try {
-      const res = await createNote({
+      const action = submitAction ?? createNote;
+      const res = await action({
         title: trimmedTitle,
         content: trimmedContent,
         categoryId,
@@ -74,7 +86,7 @@ export default function CreateNoteForm({
         return;
       }
 
-      onCreated?.(res.note);
+      onSaved?.(res.note);
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to create note.";
@@ -192,7 +204,7 @@ export default function CreateNoteForm({
             boxShadow: "0 10px 22px rgba(0,0,0,0.10)",
           }}
         >
-          {submitting ? <CircularProgress size={20} /> : "Create note"}
+          {submitting ? <CircularProgress size={20} /> : submitLabel}
         </Button>
       </Box>
     </Box>

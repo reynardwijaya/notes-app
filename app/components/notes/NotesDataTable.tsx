@@ -33,13 +33,14 @@ import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import CloseIcon from "@mui/icons-material/Close";
 import CategoryOutlinedIcon from "@mui/icons-material/CategoryOutlined";
 
-import { getNotes, type NoteWithCategory } from "@/app/actions/getNotes";
-import { deleteNote } from "@/app/actions/deleteNote";
-import CreateNoteForm, {
-  type NoteCategory,
-} from "@/app/components/notes/CreateNoteForm";
+import { getNotes } from "@/app/(dashboard)/actions/notes/getNotes";
+import { deleteNote } from "@/app/(dashboard)/actions/notes/deleteNote";
+import { updateNote } from "@/app/(dashboard)/actions/notes/updateNote";
+import type { NoteWithCategory, NoteCategory } from "@/app/(dashboard)/actions/notes/types";
+import CreateNoteForm from "@/app/components/notes/CreateNoteForm";
 import CreateCategoryModal from "@/app/components/notes/CreateCategoryModal";
 import ConfirmationModal from "@/app/components/notes/ConfirmationModal";
+import NoteDetailModal from "@/app/components/notes/NoteDetailModal";
 
 type Props = {
   initialData: NoteWithCategory[];
@@ -73,7 +74,10 @@ export default function NotesDataTable({
 
   const [loading, setLoading] = useState(false);
   const [noteModalOpen, setNoteModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
+  const [noteToView, setNoteToView] = useState<NoteWithCategory | null>(null);
+  const [noteToEdit, setNoteToEdit] = useState<NoteWithCategory | null>(null);
   const [noteToDelete, setNoteToDelete] = useState<NoteWithCategory | null>(null);
   const [deletingNote, setDeletingNote] = useState(false);
 
@@ -173,6 +177,11 @@ export default function NotesDataTable({
           <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 0.5 }}>
             <IconButton
               aria-label="Edit note"
+              onClick={(e) => {
+                e.stopPropagation();
+                setNoteToEdit(row.original);
+                setEditModalOpen(true);
+              }}
               size="small"
               sx={{ color: "text.secondary" }}
             >
@@ -180,7 +189,10 @@ export default function NotesDataTable({
             </IconButton>
             <IconButton
               aria-label="Delete note"
-              onClick={() => setNoteToDelete(row.original)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setNoteToDelete(row.original);
+              }}
               size="small"
               sx={{ color: "error.main" }}
             >
@@ -190,7 +202,7 @@ export default function NotesDataTable({
         ),
       },
     ],
-    [pageIndex, pageSize, search, refetch, showToast]
+    []
   );
 
   const table = useReactTable({
@@ -307,7 +319,14 @@ export default function NotesDataTable({
                 </TableRow>
               ) : (
                 table.getRowModel().rows.map((row) => (
-                  <TableRow key={row.id} hover>
+                  <TableRow
+                    key={row.id}
+                    hover
+                    onClick={() => {
+                      setNoteToView(row.original);
+                    }}
+                    sx={{ cursor: "pointer" }}
+                  >
                     {row.getVisibleCells().map((cell, index) => (
                       <TableCell
                         key={cell.id}
@@ -373,7 +392,7 @@ export default function NotesDataTable({
             categories={categoriesState}
             onOpenCategoryModal={() => setCategoryModalOpen(true)}
             onCancel={() => setNoteModalOpen(false)}
-            onCreated={async (created) => {
+            onSaved={async (created) => {
               setNoteModalOpen(false);
               showToast("Note created successfully", "success");
 
@@ -388,6 +407,63 @@ export default function NotesDataTable({
           />
         </DialogContent>
       </Dialog>
+
+      <Dialog
+        open={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        fullWidth
+        maxWidth="sm"
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            boxShadow: "0 18px 48px rgba(15,23,42,0.16)",
+          },
+        }}
+      >
+        <DialogTitle sx={{ pr: 6, pb: 1, fontWeight: 700 }}>
+          Edit Note
+          <IconButton
+            aria-label="Close"
+            onClick={() => setEditModalOpen(false)}
+            sx={{ position: "absolute", right: 12, top: 12 }}
+          >
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ pt: 2.5 }}>
+          <CreateNoteForm
+            categories={categoriesState}
+            onOpenCategoryModal={() => setCategoryModalOpen(true)}
+            onCancel={() => setEditModalOpen(false)}
+            submitLabel="Save changes"
+            submitAction={async (input) => {
+              if (!noteToEdit) return { error: "Missing note" };
+              return updateNote({ id: noteToEdit.id, ...input });
+            }}
+            initialValues={{
+              title: noteToEdit?.title ?? "",
+              content: noteToEdit?.content ?? "",
+              categoryId: noteToEdit?.category_id ?? "",
+            }}
+            onSaved={async (updated) => {
+              setEditModalOpen(false);
+              showToast("Note updated successfully", "success");
+              setData((prev) => prev.map((n) => (n.id === updated.id ? updated : n)));
+
+              // If edit happened outside current filtered list, re-sync.
+              if (search.trim() !== "") {
+                await refetch({ pageIndex, pageSize, search });
+              }
+            }}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <NoteDetailModal
+        open={Boolean(noteToView)}
+        note={noteToView}
+        onClose={() => setNoteToView(null)}
+      />
 
       <CreateCategoryModal
         open={categoryModalOpen}

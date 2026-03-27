@@ -3,7 +3,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-// Reusable server client for Server Components + Server Actions
 export async function createClient() {
   const cookieStore = await cookies();
 

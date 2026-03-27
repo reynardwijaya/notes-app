@@ -1,15 +1,8 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-
-export type NoteWithCategory = {
-  id: string;
-  title: string;
-  content: string;
-  category_id: string;
-  category_name: string;
-  created_at: string;
-};
+import { mapNoteRow, type NoteSelectRow } from "@/app/(dashboard)/actions/notes/supabaseMappers";
+import type { NoteWithCategory } from "@/app/(dashboard)/actions/notes/types";
 
 export async function getNotes({
   page,
@@ -49,27 +42,13 @@ export async function getNotes({
     query = query.ilike("title", `%${safeSearch}%`);
   }
 
-  const { data, error, count } = await query;
+  const { data, error, count } = await query.returns<NoteSelectRow[]>();
 
   if (error) {
     throw new Error(error.message);
   }
 
-  const rows = (data ?? []).map((row) => {
-    const categoryName =
-      typeof (row as any)?.note_categories?.name === "string"
-        ? (row as any).note_categories.name
-        : "";
-
-    return {
-      id: String((row as any).id),
-      title: String((row as any).title ?? ""),
-      content: String((row as any).content ?? ""),
-      category_id: String((row as any).category_id ?? ""),
-      category_name: categoryName,
-      created_at: String((row as any).created_at ?? ""),
-    } satisfies NoteWithCategory;
-  });
+  const rows: NoteWithCategory[] = (data ?? []).map((row) => mapNoteRow(row));
 
   return {
     data: rows,
