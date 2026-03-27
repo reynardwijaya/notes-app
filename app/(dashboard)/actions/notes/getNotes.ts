@@ -8,10 +8,16 @@ export async function getNotes({
   page,
   pageSize,
   search,
+  fromDate,
+  toDate,
+  categoryId,
 }: {
   page: number;
   pageSize: number;
   search: string;
+  fromDate?: string | null;
+  toDate?: string | null;
+  categoryId?: string | null;
 }): Promise<{ data: NoteWithCategory[]; total: number }> {
   const supabase = await createClient();
 
@@ -25,6 +31,9 @@ export async function getNotes({
   const safePageSize =
     Number.isFinite(pageSize) && pageSize > 0 && pageSize <= 100 ? pageSize : 10;
   const safeSearch = (search ?? "").trim();
+  const safeFromDate = (fromDate ?? "").trim();
+  const safeToDate = (toDate ?? "").trim();
+  const safeCategoryId = (categoryId ?? "").trim();
 
   const from = safePage * safePageSize;
   const to = from + safePageSize - 1;
@@ -40,6 +49,18 @@ export async function getNotes({
 
   if (safeSearch) {
     query = query.ilike("title", `%${safeSearch}%`);
+  }
+
+  if (safeCategoryId) {
+    query = query.eq("category_id", safeCategoryId);
+  }
+
+  // Dates are expected as YYYY-MM-DD. We filter by ISO strings to avoid TZ surprises.
+  if (safeFromDate) {
+    query = query.gte("created_at", new Date(`${safeFromDate}T00:00:00.000Z`).toISOString());
+  }
+  if (safeToDate) {
+    query = query.lte("created_at", new Date(`${safeToDate}T23:59:59.999Z`).toISOString());
   }
 
   const { data, error, count } = await query.returns<NoteSelectRow[]>();

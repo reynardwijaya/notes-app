@@ -30,6 +30,7 @@ type Props = {
   onOpenCategoryModal?: () => void;
   submitAction?: (input: NoteSaveInput) => Promise<NoteSaveResult>;
   submitLabel?: string;
+  disableSubmitIfUnchanged?: boolean;
 };
 
 export default function CreateNoteForm({
@@ -40,6 +41,7 @@ export default function CreateNoteForm({
   onOpenCategoryModal,
   submitAction,
   submitLabel = "Create note",
+  disableSubmitIfUnchanged = false,
 }: Props) {
   const [title, setTitle] = useState(initialValues?.title ?? "");
   const [content, setContent] = useState(initialValues?.content ?? "");
@@ -47,7 +49,30 @@ export default function CreateNoteForm({
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
-  const canSubmit = !submitting && title.trim() && content.trim() && categoryId;
+  const initialTrimmed = {
+    title: (initialValues?.title ?? "").trim(),
+    content: (initialValues?.content ?? "").trim(),
+    categoryId: (initialValues?.categoryId ?? "").trim(),
+  };
+
+  const currentTrimmed = {
+    title: title.trim(),
+    content: content.trim(),
+    categoryId: categoryId.trim(),
+  };
+
+  const isUnchanged =
+    disableSubmitIfUnchanged &&
+    currentTrimmed.title === initialTrimmed.title &&
+    currentTrimmed.content === initialTrimmed.content &&
+    currentTrimmed.categoryId === initialTrimmed.categoryId;
+
+  const canSubmit =
+    !submitting &&
+    Boolean(currentTrimmed.title) &&
+    Boolean(currentTrimmed.content) &&
+    Boolean(currentTrimmed.categoryId) &&
+    !isUnchanged;
 
   useEffect(() => {
     setTitle(initialValues?.title ?? "");
@@ -127,11 +152,17 @@ export default function CreateNoteForm({
         inputProps={{ maxLength: 120 }}
         sx={{
           "& .MuiOutlinedInput-root": { borderRadius: 2.5 },
+          "& .MuiFormLabel-asterisk": { color: "error.main" },
         }}
       />
 
       <FormControl fullWidth required>
-        <InputLabel id="category-label">Category</InputLabel>
+        <InputLabel
+          id="category-label"
+          sx={{ "& .MuiFormLabel-asterisk": { color: "error.main" } }}
+        >
+          Category
+        </InputLabel>
         <Select
           labelId="category-label"
           label="Category"
@@ -179,6 +210,7 @@ export default function CreateNoteForm({
         minRows={5}
         sx={{
           "& .MuiOutlinedInput-root": { borderRadius: 2.5 },
+          "& .MuiFormLabel-asterisk": { color: "error.main" },
         }}
       />
 
@@ -202,6 +234,9 @@ export default function CreateNoteForm({
             borderRadius: 2,
             px: 2.5,
             boxShadow: "0 10px 22px rgba(0,0,0,0.10)",
+            ...(isUnchanged
+              ? { bgcolor: "grey.300", color: "grey.700", boxShadow: "none" }
+              : {}),
           }}
         >
           {submitting ? <CircularProgress size={20} /> : submitLabel}

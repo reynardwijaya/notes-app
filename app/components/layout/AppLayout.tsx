@@ -1,4 +1,3 @@
-// app/components/layout/AppLayout.tsx
 import { ReactNode } from "react";
 import TopBar from "./TopBar";
 

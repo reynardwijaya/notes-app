@@ -16,6 +16,7 @@ import {
   DialogContent,
   DialogTitle,
   IconButton,
+  InputAdornment,
   Paper,
   Snackbar,
   Table,
@@ -28,6 +29,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import CloseIcon from "@mui/icons-material/Close";
@@ -41,12 +43,15 @@ import CreateNoteForm from "@/app/components/notes/CreateNoteForm";
 import CreateCategoryModal from "@/app/components/notes/CreateCategoryModal";
 import ConfirmationModal from "@/app/components/notes/ConfirmationModal";
 import NoteDetailModal from "@/app/components/notes/NoteDetailModal";
+import { buildCategoryColorIndex, getPastelByIndex } from "@/utils/categoryColors";
 
 type Props = {
   initialData: NoteWithCategory[];
   initialTotal: number;
   categories: NoteCategory[];
   initialPageSize?: number;
+  lockedCategoryId?: string;
+  hideTopActions?: boolean;
 };
 
 function formatCreatedAt(value: string) {
@@ -63,6 +68,8 @@ export default function NotesDataTable({
   initialTotal,
   categories,
   initialPageSize = 10,
+  lockedCategoryId,
+  hideTopActions = false,
 }: Props) {
   const [data, setData] = useState<NoteWithCategory[]>(initialData);
   const [total, setTotal] = useState(initialTotal);
@@ -71,6 +78,8 @@ export default function NotesDataTable({
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(initialPageSize);
   const [search, setSearch] = useState("");
+  const [fromDate, setFromDate] = useState<string>("");
+  const [toDate, setToDate] = useState<string>("");
 
   const [loading, setLoading] = useState(false);
   const [noteModalOpen, setNoteModalOpen] = useState(false);
@@ -87,6 +96,11 @@ export default function NotesDataTable({
     "success"
   );
 
+  const categoryColorIndex = useMemo(
+    () => buildCategoryColorIndex(categoriesState),
+    [categoriesState]
+  );
+
   const showToast = useCallback((message: string, severity: "success" | "error") => {
     setSnackbarMessage(message);
     setSnackbarSeverity(severity);
@@ -94,13 +108,22 @@ export default function NotesDataTable({
   }, []);
 
   const refetch = useCallback(
-    async (next: { pageIndex: number; pageSize: number; search: string }) => {
+    async (next: {
+      pageIndex: number;
+      pageSize: number;
+      search: string;
+      fromDate: string;
+      toDate: string;
+    }) => {
       setLoading(true);
       try {
         const res = await getNotes({
           page: next.pageIndex,
           pageSize: next.pageSize,
           search: next.search,
+          fromDate: next.fromDate,
+          toDate: next.toDate,
+          categoryId: lockedCategoryId ?? null,
         });
         setData(res.data);
         setTotal(res.total);
@@ -116,15 +139,15 @@ export default function NotesDataTable({
         setLoading(false);
       }
     },
-    [showToast]
+    [lockedCategoryId, showToast]
   );
 
   useEffect(() => {
     const t = setTimeout(() => {
-      void refetch({ pageIndex, pageSize, search });
+      void refetch({ pageIndex, pageSize, search, fromDate, toDate });
     }, 250);
     return () => clearTimeout(t);
-  }, [pageIndex, pageSize, search, refetch]);
+  }, [pageIndex, pageSize, search, fromDate, toDate, refetch]);
 
   const columns = useMemo<ColumnDef<NoteWithCategory>[]>(
     () => [
@@ -149,17 +172,28 @@ export default function NotesDataTable({
       {
         accessorKey: "category_name",
         header: "Category",
-        cell: (info) => (
-          <Chip
-            label={String(info.getValue() ?? "Uncategorized")}
-            size="small"
-            sx={{
-              borderRadius: 1.5,
-              bgcolor: "grey.100",
-              "& .MuiChip-label": { px: 1, fontSize: 12 },
-            }}
-          />
-        ),
+        cell: ({ row }) => {
+          const categoryId = row.original.category_id;
+          const label = row.original.category_name || "Uncategorized";
+          const idx = categoryId ? categoryColorIndex.get(categoryId) : undefined;
+          const color = typeof idx === "number" ? getPastelByIndex(idx) : null;
+
+          return (
+            <Chip
+              label={label}
+              size="small"
+              sx={{
+                borderRadius: 999,
+                height: 26,
+                bgcolor: color?.bg ?? "grey.100",
+                color: color?.text ?? "text.secondary",
+                border: "1px solid",
+                borderColor: color?.border ?? "divider",
+                "& .MuiChip-label": { px: 1.25, fontSize: 12, fontWeight: 700 },
+              }}
+            />
+          );
+        },
       },
       {
         accessorKey: "created_at",
@@ -202,7 +236,7 @@ export default function NotesDataTable({
         ),
       },
     ],
-    []
+    [categoryColorIndex]
   );
 
   const table = useReactTable({
@@ -215,56 +249,98 @@ export default function NotesDataTable({
 
   return (
     <Box className="space-y-6">
-      <Box className="flex items-center justify-between gap-4">
-        <TextField
-          fullWidth
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setPageIndex(0);
-          }}
-          placeholder="Search notes…"
-          size="small"
-          sx={{
-            maxWidth: 460,
-            "& .MuiOutlinedInput-root": { borderRadius: 2.5 },
-          }}
-        />
+      <Box className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <Box className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <TextField
+            fullWidth
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPageIndex(0);
+            }}
+            placeholder="Search notes..."
+            size="small"
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon sx={{ color: "text.disabled" }} fontSize="small" />
+                </InputAdornment>
+              ),
+            }}
+            sx={{
+              maxWidth: 420,
+              "& .MuiOutlinedInput-root": { borderRadius: 2.5 },
+            }}
+          />
 
-        <Box sx={{ display: "flex", gap: 1, flexShrink: 0 }}>
-          <Button
-            variant="outlined"
-            startIcon={<CategoryOutlinedIcon fontSize="small" />}
-            onClick={() => setCategoryModalOpen(true)}
-            sx={{
-              textTransform: "none",
-              borderRadius: 2,
-              px: 1.5,
-              minWidth: "auto",
+          <TextField
+            label="From"
+            type="date"
+            value={fromDate}
+            onChange={(e) => {
+              setFromDate(e.target.value);
+              setPageIndex(0);
             }}
-          >
-            Create Category
-          </Button>
-          <Button
-            variant="contained"
-            disableElevation
-            onClick={() => setNoteModalOpen(true)}
+            size="small"
+            InputLabelProps={{ shrink: true }}
             sx={{
-              textTransform: "none",
-              borderRadius: 2,
-              px: 2,
-              boxShadow: "0 8px 18px rgba(0,0,0,0.08)",
+              minWidth: 170,
+              "& .MuiOutlinedInput-root": { borderRadius: 2.5 },
             }}
-          >
-            Add Note
-          </Button>
+          />
+          <TextField
+            label="To"
+            type="date"
+            value={toDate}
+            onChange={(e) => {
+              setToDate(e.target.value);
+              setPageIndex(0);
+            }}
+            size="small"
+            InputLabelProps={{ shrink: true }}
+            sx={{
+              minWidth: 170,
+              "& .MuiOutlinedInput-root": { borderRadius: 2.5 },
+            }}
+          />
         </Box>
+
+        {!hideTopActions && (
+          <Box sx={{ display: "flex", gap: 1, flexShrink: 0 }}>
+            <Button
+              variant="outlined"
+              startIcon={<CategoryOutlinedIcon fontSize="small" />}
+              onClick={() => setCategoryModalOpen(true)}
+              sx={{
+                textTransform: "none",
+                borderRadius: 2,
+                px: 1.5,
+                minWidth: "auto",
+              }}
+            >
+              Create Category
+            </Button>
+            <Button
+              variant="contained"
+              disableElevation
+              onClick={() => setNoteModalOpen(true)}
+              sx={{
+                textTransform: "none",
+                borderRadius: 2,
+                px: 2,
+                boxShadow: "0 8px 18px rgba(0,0,0,0.08)",
+              }}
+            >
+              Add Note
+            </Button>
+          </Box>
+        )}
       </Box>
 
       <Paper
         elevation={0}
         sx={{
-          maxWidth: 980,
+          width: "100%",
           borderRadius: 2,
           border: "1px solid",
           borderColor: "divider",
@@ -282,7 +358,8 @@ export default function NotesDataTable({
                       key={header.id}
                       sx={{
                         fontWeight: 700,
-                        py: 1.25,
+                        py: 1.1,
+                        px: 1.5,
                         ...(index === headerGroup.headers.length - 1
                           ? { textAlign: "right", pr: 2 }
                           : {}),
@@ -332,6 +409,7 @@ export default function NotesDataTable({
                         key={cell.id}
                         sx={{
                           py: 1,
+                          px: 1.5,
                           ...(index === row.getVisibleCells().length - 1
                             ? { textAlign: "right", pr: 2 }
                             : {}),
@@ -402,7 +480,7 @@ export default function NotesDataTable({
                 return;
               }
 
-              await refetch({ pageIndex, pageSize, search });
+              await refetch({ pageIndex, pageSize, search, fromDate, toDate });
             }}
           />
         </DialogContent>
@@ -436,6 +514,7 @@ export default function NotesDataTable({
             onOpenCategoryModal={() => setCategoryModalOpen(true)}
             onCancel={() => setEditModalOpen(false)}
             submitLabel="Save changes"
+            disableSubmitIfUnchanged
             submitAction={async (input) => {
               if (!noteToEdit) return { error: "Missing note" };
               return updateNote({ id: noteToEdit.id, ...input });
@@ -452,7 +531,7 @@ export default function NotesDataTable({
 
               // If edit happened outside current filtered list, re-sync.
               if (search.trim() !== "") {
-                await refetch({ pageIndex, pageSize, search });
+                await refetch({ pageIndex, pageSize, search, fromDate, toDate });
               }
             }}
           />
@@ -493,7 +572,7 @@ export default function NotesDataTable({
             }
             showToast("Note deleted", "success");
             setNoteToDelete(null);
-            await refetch({ pageIndex, pageSize, search });
+            await refetch({ pageIndex, pageSize, search, fromDate, toDate });
           } finally {
             setDeletingNote(false);
           }

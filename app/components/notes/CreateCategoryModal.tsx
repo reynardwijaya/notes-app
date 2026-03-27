@@ -16,8 +16,10 @@ import CloseIcon from "@mui/icons-material/Close";
 
 import { createCategory } from "@/app/(dashboard)/actions/categories/createCategory";
 import { deleteCategory } from "@/app/(dashboard)/actions/categories/deleteCategory";
+import { getCategoryUsage } from "@/app/(dashboard)/actions/categories/getCategoryUsage";
 import ConfirmationModal from "@/app/components/notes/ConfirmationModal";
 import type { NoteCategory } from "@/app/(dashboard)/actions/notes/types";
+import { buildCategoryColorIndex, getPastelByIndex } from "@/utils/categoryColors";
 
 type Props = {
   open: boolean;
@@ -40,6 +42,10 @@ export default function CreateCategoryModal({
   const [saving, setSaving] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteUsage, setDeleteUsage] = useState<{ titles: string[] } | null>(null);
+  const [deleteUsageLoading, setDeleteUsageLoading] = useState(false);
+
+  const categoryColorIndex = buildCategoryColorIndex(categories);
 
   const handleCreate = async () => {
     const trimmed = name.trim();
@@ -113,18 +119,48 @@ export default function CreateCategoryModal({
               </Typography>
               <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
                 {categories.map((cat) => (
-                  <Chip
-                    key={cat.id}
-                    label={cat.name}
-                    onDelete={() => setDeleteId(cat.id)}
-                    deleteIcon={<CloseIcon sx={{ fontSize: 16 }} />}
-                    sx={{
-                      borderRadius: 999,
-                      height: 32,
-                      bgcolor: "grey.100",
-                      "& .MuiChip-label": { px: 1.25, fontWeight: 500 },
-                    }}
-                  />
+                  (() => {
+                    const idx = categoryColorIndex.get(cat.id) ?? 0;
+                    const color = getPastelByIndex(idx);
+                    return (
+                      <Chip
+                        key={cat.id}
+                        label={cat.name}
+                        onDelete={async () => {
+                          setDeleteId(cat.id);
+                          setDeleteUsage(null);
+                          setDeleteUsageLoading(true);
+                          try {
+                            const res = await getCategoryUsage({ id: cat.id });
+                            if ("error" in res) return;
+                            if (res.titles.length > 0) {
+                              setDeleteUsage({ titles: res.titles });
+                            }
+                          } finally {
+                            setDeleteUsageLoading(false);
+                          }
+                        }}
+                        deleteIcon={<CloseIcon sx={{ fontSize: 16 }} />}
+                        sx={{
+                          borderRadius: 999,
+                          height: 32,
+                          bgcolor: color.bg,
+                          color: color.text,
+                          border: "1px solid",
+                          borderColor: color.border,
+                          "& .MuiChip-label": { px: 1.25, fontWeight: 700 },
+                          "& .MuiChip-deleteIcon": {
+                            color: "#B91C1C",
+                            "&:hover": { color: "#7F1D1D" },
+                          },
+                          "&:hover": {
+                            bgcolor: color.bg,
+                            borderColor: color.border,
+                          },
+                        }}
+                      />
+                    );
+                  })()
                 ))}
               </Box>
             </Box>
@@ -138,7 +174,10 @@ export default function CreateCategoryModal({
               required
               fullWidth
               size="small"
-              sx={{ "& .MuiOutlinedInput-root": { borderRadius: 1.5 } }}
+              sx={{
+                "& .MuiOutlinedInput-root": { borderRadius: 1.5 },
+                "& .MuiFormLabel-asterisk": { color: "error.main" },
+              }}
             />
             <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1 }}>
               <Button
@@ -167,11 +206,20 @@ export default function CreateCategoryModal({
 
       <ConfirmationModal
         open={Boolean(deleteId)}
-        onClose={() => setDeleteId(null)}
+        onClose={() => {
+          setDeleteId(null);
+          setDeleteUsage(null);
+        }}
         onConfirm={handleDelete}
-        loading={deleteLoading}
+        loading={deleteLoading || deleteUsageLoading}
         title="Delete Category?"
-        subtitle="This action cannot be undone"
+        subtitle={
+          deleteUsage?.titles?.length
+            ? `This category is used in the following notes: ${deleteUsage.titles
+                .map((t) => `'${t}'`)
+                .join(", ")}. Are you sure you want to delete it?`
+            : "This action cannot be undone"
+        }
         confirmText="Delete"
         confirmColor="error"
       />
