@@ -1,7 +1,8 @@
 "use client";
 
-import { Box, Typography, Button, Stack } from "@mui/material";
+import { Box, Typography, Button, Stack, Fade, Paper } from "@mui/material";
 import { useRouter } from "next/navigation";
+import { FileText, Folder, Search } from "lucide-react";
 
 export default function Home() {
   const router = useRouter();
@@ -11,76 +12,232 @@ export default function Home() {
       sx={{
         minHeight: "100vh",
         display: "flex",
+        flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: "#f9fafb",
-        px: 2,
+        background:
+          "linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f1f5f9 100%)",
+        position: "relative",
+        overflow: "hidden",
+        px: { xs: 2, sm: 3 },
+        pt: { xs: 4, sm: 0 },
       }}
     >
+      {/* Subtle background elements */}
+      <Box
+        sx={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundImage:
+            "radial-gradient(circle at 20% 80%, rgba(59,130,246,0.08) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(168,85,247,0.08) 0%, transparent 50%)",
+          pointerEvents: "none",
+        }}
+      />
+
       <Box
         sx={{
           maxWidth: 600,
           textAlign: "center",
+          position: "relative",
+          zIndex: 1,
+          width: "100%",
         }}
       >
-        {/* TITLE */}
-        <Typography
-          variant="h3"
-          fontWeight={700}
-          gutterBottom
-          sx={{ color: "#111827" }}
-        >
-          Notes Management System
-        </Typography>
+        {/* HERO TITLE - Ultra Minimal */}
+        <Fade in timeout={800}>
+          <Typography
+            variant="h1"
+            component="h1"
+            fontWeight={700}
+            sx={{
+              color: "rgb(17, 24, 39)",
+              mb: 1.5,
+              fontSize: { xs: "2.25rem", sm: "3rem", md: "4rem" },
+              lineHeight: 1.15,
+              letterSpacing: "-0.03em",
+            }}
+          >
+            NoteBase
+          </Typography>
+        </Fade>
 
-        {/* SUBTITLE */}
-        <Typography
-          variant="body1"
-          sx={{
-            color: "#6b7280",
-            mb: 4,
-          }}
-        >
-          Organize your thoughts, manage your notes, and stay productive. All in
-          one simple and secure place.
-        </Typography>
+        {/* MINIMAL SUBTITLE */}
+        <Fade in timeout={1000}>
+          <Typography
+            variant="h5"
+            sx={{
+              color: "rgb(107, 114, 128)",
+              mb: 6,
+              fontWeight: 400,
+              lineHeight: 1.5,
+              fontSize: { xs: "1.125rem", sm: "1.25rem" },
+              maxWidth: 400,
+              mx: "auto",
+            }}
+          >
+            Clean. Simple. Powerful.
+          </Typography>
+        </Fade>
 
-        {/* BUTTONS */}
+        {/* FEATURE PREVIEW - Keep this! */}
+        <Fade in timeout={1200}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 3,
+              borderRadius: 3,
+              border: "1px solid rgba(255,255,255,0.2)",
+              backdropFilter: "blur(20px)",
+              background: "rgba(255,255,255,0.6)",
+              mb: 5,
+              maxWidth: 400,
+              mx: "auto",
+            }}
+          >
+            <Stack
+              direction="row"
+              spacing={2}
+              alignItems="center"
+              justifyContent="center"
+            >
+              {/* Note Card */}
+              <Paper
+                sx={{
+                  p: 2,
+                  width: 72,
+                  height: 72,
+                  borderRadius: 2,
+                  border: "1px solid rgba(0,0,0,0.05)",
+                  background:
+                    "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
+                  boxShadow: "0 4px 16px rgba(0,0,0,0.06)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <FileText size={20} className="text-slate-600" />
+              </Paper>
+
+              {/* Folder Card */}
+              <Paper
+                sx={{
+                  p: 2,
+                  width: 72,
+                  height: 72,
+                  borderRadius: 2,
+                  border: "1px solid rgba(0,0,0,0.05)",
+                  background:
+                    "linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)",
+                  boxShadow: "0 4px 16px rgba(251,191,36,0.2)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Folder size={20} className="text-amber-700" />
+              </Paper>
+
+              {/* Search Card */}
+              <Paper
+                sx={{
+                  p: 2,
+                  width: 72,
+                  height: 72,
+                  borderRadius: 2,
+                  border: "1px solid rgba(0,0,0,0.05)",
+                  background:
+                    "linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)",
+                  boxShadow: "0 4px 16px rgba(59,130,246,0.2)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Search size={20} className="text-blue-600" />
+              </Paper>
+            </Stack>
+          </Paper>
+        </Fade>
+
+        {/* ACTION BUTTONS */}
         <Stack
           direction={{ xs: "column", sm: "row" }}
           spacing={2}
           justifyContent="center"
+          sx={{ mb: 3 }}
         >
-          <Button
-            variant="contained"
-            size="large"
-            onClick={() => router.push("/auth/login")}
-            sx={{
-              px: 4,
-              py: 1.5,
-              borderRadius: 2,
-              textTransform: "none",
-              fontWeight: 600,
-            }}
-          >
-            Login
-          </Button>
+          <Fade in timeout={1400}>
+            <Button
+              variant="contained"
+              size="large"
+              onClick={() => router.push("/auth/login")}
+              sx={{
+                px: 4,
+                py: 1.25,
+                borderRadius: 2.5,
+                textTransform: "none",
+                fontWeight: 600,
+                fontSize: "0.95rem",
+                height: 44,
+                minWidth: 140,
+                boxShadow: "0 4px 16px rgba(59,130,246,0.25)",
+                bgcolor: "rgb(59 130 246)",
+                "&:hover": {
+                  bgcolor: "rgb(37 99 235)",
+                  boxShadow: "0 8px 25px rgba(59,130,246,0.35)",
+                  transform: "translateY(-1px)",
+                },
+                transition: "all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+              }}
+            >
+              Get Started
+            </Button>
+          </Fade>
 
-          <Button
-            variant="outlined"
-            size="large"
-            onClick={() => router.push("/auth/register")}
+          <Fade in timeout={1600}>
+            <Button
+              variant="text"
+              size="large"
+              onClick={() => router.push("/auth/register")}
+              sx={{
+                px: 3.5,
+                py: 1.25,
+                borderRadius: 2.5,
+                textTransform: "none",
+                fontWeight: 500,
+                fontSize: "0.95rem",
+                color: "rgb(71 85 105)",
+                height: 44,
+                minWidth: 140,
+                "&:hover": {
+                  backgroundColor: "rgba(0,0,0,0.04)",
+                  color: "rgb(59 130 246)",
+                },
+                transition: "all 0.2s ease",
+              }}
+            >
+              New Account
+            </Button>
+          </Fade>
+        </Stack>
+
+        {/* TRUST SIGNAL */}
+        <Fade in timeout={1800}>
+          <Typography
+            variant="body2"
             sx={{
-              px: 4,
-              py: 1.5,
-              borderRadius: 2,
-              textTransform: "none",
-              fontWeight: 600,
+              color: "rgb(148 163 184)",
+              fontWeight: 500,
+              fontSize: "0.875rem",
             }}
           >
-            Register
-          </Button>
-        </Stack>
+            Join 50K+ creators organizing their ideas
+          </Typography>
+        </Fade>
       </Box>
     </Box>
   );
