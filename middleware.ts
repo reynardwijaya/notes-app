@@ -67,7 +67,7 @@ export async function middleware(req: NextRequest) {
 
     // User only
     if (pathname.startsWith("/notes") && role === "admin") {
-      return NextResponse.redirect(new URL("/admin/dashboard", req.url));
+      return NextResponse.redirect(new URL("/admin", req.url));
     }
   }
 

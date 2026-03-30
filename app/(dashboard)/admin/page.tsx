@@ -1,153 +1,139 @@
 import AppLayout from "@/app/components/layout/AppLayout";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
-import { getDashboardData } from "./lib/getDashboardData";
+import { createClient } from "@/lib/supabase/server";
+import UsersTable from "@/app/components/admin/UsersTable";
+import { requireAdmin } from "@/app/(dashboard)/actions/admin/guards";
 
-type NotesPerUser = {
-  user_id: string;
-  total_notes: number;
-};
-
-type NotesPerCategory = {
-  category: string;
-  total: number;
-};
-
-type MostActiveUser = {
-  user_id: string;
-  total_notes: number;
-};
-
-type AdminDashboardData = {
+type AdminDashboardRpcResponse = {
   total_users: number;
   total_notes: number;
+  most_active_user: { id: string; email: string; total_notes: number } | null;
+  users: Array<{
+    id: string;
+    email: string;
+    role: string;
+    total_categories: number;
+    total_notes: number;
+    created_at: string;
+  }>;
 };
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object";
+}
+
+function parseAdminDashboardResponse(value: unknown): AdminDashboardRpcResponse {
+  const fallback: AdminDashboardRpcResponse = {
+    total_users: 0,
+    total_notes: 0,
+    most_active_user: null,
+    users: [],
+  };
+
+  if (!isRecord(value)) return fallback;
+
+  const total_users =
+    typeof value.total_users === "number" ? value.total_users : fallback.total_users;
+  const total_notes =
+    typeof value.total_notes === "number" ? value.total_notes : fallback.total_notes;
+
+  const most_active_user_raw = value.most_active_user;
+  const most_active_user =
+    isRecord(most_active_user_raw) &&
+    typeof most_active_user_raw.id === "string" &&
+    typeof most_active_user_raw.email === "string" &&
+    typeof most_active_user_raw.total_notes === "number"
+      ? {
+          id: most_active_user_raw.id,
+          email: most_active_user_raw.email,
+          total_notes: most_active_user_raw.total_notes,
+        }
+      : null;
+
+  const users_raw = Array.isArray(value.users) ? value.users : [];
+  const users = users_raw
+    .filter(isRecord)
+    .map((u) => ({
+      id: typeof u.id === "string" ? u.id : "",
+      email: typeof u.email === "string" ? u.email : "",
+      role: typeof u.role === "string" ? u.role : "user",
+      total_categories: typeof u.total_categories === "number" ? u.total_categories : 0,
+      total_notes: typeof u.total_notes === "number" ? u.total_notes : 0,
+      created_at: typeof u.created_at === "string" ? u.created_at : "",
+    }))
+    .filter((u) => u.id);
+
+  return { total_users, total_notes, most_active_user, users };
+}
+
 export default async function AdminDashboardPage() {
-  const cookieStore = await cookies();
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get: (name) => cookieStore.get(name)?.value,
-      },
-    },
-  );
-
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  let role: "admin" | "user" = "user";
+  const gate = await requireAdmin();
+  if (!gate.ok) return <div className="p-6 text-red-500">Unauthorized</div>;
 
-  if (user) {
-    const { data } = await supabase
-      .from("users")
-      .select("role")
-      .eq("id", user.id)
-      .single();
+  const { data, error } = await supabase.rpc("get_admin_dashboard");
+  if (error) return <div className="p-6 text-red-500">{error.message}</div>;
 
-    if (data?.role === "admin") {
-      role = "admin";
-    }
-  }
+  console.log("ADMIN DASHBOARD DATA:", data);
 
-  if (role !== "admin") {
-    return <div className="p-6 text-red-500">Unauthorized</div>;
-  }
-
-  // DATA (CAST TYPES)
-  const {
-    totalData,
-    notesPerUser,
-    notesPerCategory,
-    mostActive,
-  }: {
-    totalData: AdminDashboardData | null;
-    notesPerUser: NotesPerUser[] | null;
-    notesPerCategory: NotesPerCategory[] | null;
-    mostActive: MostActiveUser[] | null;
-  } = await getDashboardData();
+  const parsed = parseAdminDashboardResponse(data);
+  const mostActive = parsed.most_active_user;
 
   return (
-    <AppLayout
-      pageTitle="Admin Dashboard"
-      userEmail={user?.email || ""}
-      role={role}
-    >
+    <AppLayout pageTitle="Admin Dashboard" userEmail={user?.email ?? ""} role="admin">
       <div className="space-y-6">
-        {/* STATS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white p-6 rounded-2xl shadow">
-            <p className="text-gray-500 text-sm">Total Users</p>
-            <h2 className="text-3xl font-bold text-gray-800">
-              {totalData?.total_users || 0}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="lg:col-span-3 rounded-2xl border border-gray-100 bg-[#E8F1FF] p-6 shadow-sm">
+            <p className="text-gray-600 text-sm">Total Users</p>
+            <h2 className="text-3xl font-extrabold text-gray-900 mt-2">
+              {parsed.total_users}
             </h2>
           </div>
 
-          <div className="bg-white p-6 rounded-2xl shadow">
-            <p className="text-gray-500 text-sm">Total Notes</p>
-            <h2 className="text-3xl font-bold text-gray-800">
-              {totalData?.total_notes || 0}
+          <div className="lg:col-span-3 rounded-2xl border border-gray-100 bg-[#EAFBF2] p-6 shadow-sm">
+            <p className="text-gray-600 text-sm">Total Notes</p>
+            <h2 className="text-3xl font-extrabold text-gray-900 mt-2">
+              {parsed.total_notes}
             </h2>
+          </div>
+
+          <div className="lg:col-span-6 rounded-2xl border border-gray-100 bg-[#F3E8FF] p-6 shadow-sm">
+            <p className="text-gray-600 text-sm">Most Active User</p>
+            {mostActive ? (
+              <div className="mt-2">
+                <div className="text-lg font-extrabold text-gray-900">
+                  {mostActive.email || mostActive.id}
+                </div>
+                <div className="text-sm text-gray-600 mt-1">
+                  <span className="font-bold text-gray-900">
+                    {mostActive.total_notes}
+                  </span>{" "}
+                  notes
+                </div>
+              </div>
+            ) : (
+              <div className="mt-2 text-sm text-gray-600">No data</div>
+            )}
           </div>
         </div>
 
-        {/* NOTES PER USER */}
-        <div className="bg-white p-6 rounded-2xl shadow">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">
-            Notes per User
-          </h2>
-
-          {notesPerUser?.length ? (
-            <ul className="space-y-2 text-gray-600">
-              {notesPerUser.map((item: NotesPerUser) => (
-                <li key={item.user_id}>
-                  User {item.user_id.slice(0, 6)} → {item.total_notes} notes
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-gray-400">No data</p>
-          )}
-        </div>
-
-        {/* NOTES PER CATEGORY */}
-        <div className="bg-white p-6 rounded-2xl shadow">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">
-            Notes per Category
-          </h2>
-
-          {notesPerCategory?.length ? (
-            <ul className="space-y-2 text-gray-600">
-              {notesPerCategory.map((item: NotesPerCategory) => (
-                <li key={item.category}>
-                  {item.category} → {item.total}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-gray-400">No data</p>
-          )}
-        </div>
-
-        {/* MOST ACTIVE USER */}
-        <div className="bg-white p-6 rounded-2xl shadow">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">
-            Most Active User
-          </h2>
-
-          {mostActive?.length ? (
-            <p className="text-gray-600">
-              User {mostActive[0].user_id.slice(0, 6)} dengan{" "}
-              <span className="font-semibold">{mostActive[0].total_notes}</span>{" "}
-              notes
-            </p>
-          ) : (
-            <p className="text-gray-400">No data</p>
-          )}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-extrabold text-gray-900">Users</h2>
+          </div>
+          <UsersTable
+            users={parsed.users.map((u) => ({
+              id: u.id,
+              email: u.email,
+              role: u.role === "admin" ? "admin" : "user",
+              total_categories: u.total_categories,
+              total_notes: u.total_notes,
+              created_at: u.created_at,
+            }))}
+          />
         </div>
       </div>
     </AppLayout>

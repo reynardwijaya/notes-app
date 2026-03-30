@@ -3,7 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createNoteSchema } from "@/lib/validations/note";
 import * as v from "valibot";
-import { mapNoteRow, type NoteSelectRow } from "@/app/(dashboard)/actions/notes/supabaseMappers";
+import { mapNoteRow } from "@/app/(dashboard)/actions/notes/supabaseMappers";
 import type { NoteSaveInput, NoteSaveResult } from "@/app/(dashboard)/actions/notes/types";
 
 export async function updateNote(input: {
@@ -41,8 +41,7 @@ export async function updateNote(input: {
     .eq("id", input.id)
     .eq("user_id", user.id)
     .select("id,title,content,category_id,created_at,note_categories(name)")
-    .single()
-    .returns<NoteSelectRow>();
+    .single();
 
   if (error) return { error: error.message };
   if (!data) return { error: "Failed to update note" };

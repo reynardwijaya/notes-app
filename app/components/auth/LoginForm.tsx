@@ -36,7 +36,7 @@ export default function LoginForm() {
       setLoading(false);
 
       if (role === "admin") {
-        router.push("/admin/dashboard");
+        router.push("/admin");
       } else {
         router.push("/notes");
       }

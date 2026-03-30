@@ -15,9 +15,19 @@ type Props = {
   initialData: NoteWithCategory[];
   initialTotal: number;
   categories: CategoryWithMeta[];
+  readOnly?: boolean;
+  hideCreateButtons?: boolean;
+  notesScopeUserId?: string;
 };
 
-export default function NotesDashboardShell({ initialData, initialTotal, categories }: Props) {
+export default function NotesDashboardShell({
+  initialData,
+  initialTotal,
+  categories,
+  readOnly = false,
+  hideCreateButtons = false,
+  notesScopeUserId,
+}: Props) {
   const [categoriesState, setCategoriesState] = useState<CategoryWithMeta[]>(categories);
   const [search, setSearch] = useState("");
   const [fromDate, setFromDate] = useState("");
@@ -123,36 +133,38 @@ export default function NotesDashboardShell({ initialData, initialTotal, categor
           </IconButton>
         </Box>
 
-        <Box sx={{ display: "flex", gap: 1, flexShrink: 0 }}>
-          <Button
-            variant="outlined"
-            startIcon={<CategoryOutlinedIcon fontSize="small" />}
-            onClick={() => setOpenCategoryModalSignal((v) => (v ?? 0) + 1)}
-            sx={{
-              textTransform: "none",
-              borderRadius: 2,
-              px: 1.5,
-              minWidth: "auto",
-              height: 40,
-            }}
-          >
-            Create Category
-          </Button>
-          <Button
-            variant="contained"
-            disableElevation
-            onClick={() => setOpenCreateNoteSignal((v) => (v ?? 0) + 1)}
-            sx={{
-              textTransform: "none",
-              borderRadius: 2,
-              px: 2,
-              height: 40,
-              boxShadow: "0 8px 18px rgba(0,0,0,0.08)",
-            }}
-          >
-            Add Note
-          </Button>
-        </Box>
+        {!hideCreateButtons && !readOnly && (
+          <Box sx={{ display: "flex", gap: 1, flexShrink: 0 }}>
+            <Button
+              variant="outlined"
+              startIcon={<CategoryOutlinedIcon fontSize="small" />}
+              onClick={() => setOpenCategoryModalSignal((v) => (v ?? 0) + 1)}
+              sx={{
+                textTransform: "none",
+                borderRadius: 2,
+                px: 1.5,
+                minWidth: "auto",
+                height: 40,
+              }}
+            >
+              Create Category
+            </Button>
+            <Button
+              variant="contained"
+              disableElevation
+              onClick={() => setOpenCreateNoteSignal((v) => (v ?? 0) + 1)}
+              sx={{
+                textTransform: "none",
+                borderRadius: 2,
+                px: 2,
+                height: 40,
+                boxShadow: "0 8px 18px rgba(0,0,0,0.08)",
+              }}
+            >
+              Add Note
+            </Button>
+          </Box>
+        )}
       </Box>
 
       <Box
@@ -177,6 +189,8 @@ export default function NotesDashboardShell({ initialData, initialTotal, categor
             openCategoryModalSignal={openCategoryModalSignal}
             recentlyDeletedCategoryId={deletedCategoryId}
             onCategoriesUpdated={(next) => setCategoriesState(next)}
+            readOnly={readOnly}
+            notesScopeUserId={notesScopeUserId}
           />
         </Box>
 
@@ -189,6 +203,13 @@ export default function NotesDashboardShell({ initialData, initialTotal, categor
             onCategoryDeleted={(categoryId) => {
               setDeletedCategoryId(categoryId);
             }}
+            onRequestCreateCategory={
+              hideCreateButtons || readOnly
+                ? undefined
+                : () => setOpenCategoryModalSignal((v) => (v ?? 0) + 1)
+            }
+            readOnly={readOnly}
+            notesScopeUserId={notesScopeUserId}
           />
         </Box>
       </Box>

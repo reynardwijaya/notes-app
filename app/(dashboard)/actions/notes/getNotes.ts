@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { mapNoteRow, type NoteSelectRow } from "@/app/(dashboard)/actions/notes/supabaseMappers";
+import { mapNoteRow } from "@/app/(dashboard)/actions/notes/supabaseMappers";
 import type { NoteWithCategory } from "@/app/(dashboard)/actions/notes/types";
 
 export async function getNotes({
@@ -63,13 +63,14 @@ export async function getNotes({
     query = query.lte("created_at", new Date(`${safeToDate}T23:59:59.999Z`).toISOString());
   }
 
-  const { data, error, count } = await query.returns<NoteSelectRow[]>();
+  const { data, error, count } = await query;
 
   if (error) {
     throw new Error(error.message);
   }
 
-  const rows: NoteWithCategory[] = (data ?? []).map((row) => mapNoteRow(row));
+  const list = Array.isArray(data) ? data : [];
+  const rows: NoteWithCategory[] = list.map((row) => mapNoteRow(row));
 
   return {
     data: rows,

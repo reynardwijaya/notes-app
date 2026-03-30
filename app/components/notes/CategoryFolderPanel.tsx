@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import {
   Box,
+  Button,
   Dialog,
   DialogContent,
   DialogTitle,
@@ -11,7 +12,6 @@ import {
   Menu,
   MenuItem,
   Typography,
-  Button,
 } from "@mui/material";
 import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
@@ -21,7 +21,10 @@ import InboxOutlinedIcon from "@mui/icons-material/InboxOutlined";
 
 import type { NoteCategory } from "@/app/(dashboard)/actions/notes/types";
 import NotesDataTable from "@/app/components/notes/NotesDataTable";
-import { buildCategoryColorIndex, getPastelByIndex } from "@/utils/categoryColors";
+import {
+  buildCategoryColorIndex,
+  getPastelByIndex,
+} from "@/utils/categoryColors";
 import ConfirmationModal from "@/app/components/notes/ConfirmationModal";
 import { deleteCategory } from "@/app/(dashboard)/actions/categories/deleteCategory";
 
@@ -33,6 +36,9 @@ type Props = {
   notesInitialTotal: number;
   onCategoriesUpdated?: (categories: CategoryWithMeta[]) => void;
   onCategoryDeleted?: (categoryId: string) => void;
+  onRequestCreateCategory?: () => void;
+  readOnly?: boolean;
+  notesScopeUserId?: string;
 };
 
 function formatCreatedAt(value: string) {
@@ -50,6 +56,9 @@ export default function CategoryFolderPanel({
   notesInitialTotal,
   onCategoriesUpdated,
   onCategoryDeleted,
+  onRequestCreateCategory,
+  readOnly = false,
+  notesScopeUserId,
 }: Props) {
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
   const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null);
@@ -59,7 +68,7 @@ export default function CategoryFolderPanel({
 
   const categoryColorIndex = useMemo(
     () => buildCategoryColorIndex(categories),
-    [categories]
+    [categories],
   );
 
   const activeCategory =
@@ -109,6 +118,21 @@ export default function CategoryFolderPanel({
             <Typography variant="caption">
               Create your first category to organize your notes
             </Typography>
+            {onRequestCreateCategory && (
+              <Button
+                variant="outlined"
+                onClick={onRequestCreateCategory}
+                sx={{
+                  mt: 1,
+                  textTransform: "none",
+                  borderRadius: 2,
+                  height: 36,
+                  px: 1.75,
+                }}
+              >
+                Create Category
+              </Button>
+            )}
           </Box>
         ) : (
           /* ================= GRID ================= */
@@ -155,6 +179,7 @@ export default function CategoryFolderPanel({
                       size="small"
                       onClick={(e) => {
                         e.stopPropagation();
+                        if (readOnly) return;
                         setMenuAnchorEl(e.currentTarget);
                         setMenuCategoryId(cat.id);
                       }}
@@ -164,6 +189,7 @@ export default function CategoryFolderPanel({
                           bgcolor: "rgba(0,0,0,0.05)",
                         },
                       }}
+                      disabled={readOnly}
                     >
                       <MoreHorizIcon fontSize="small" />
                     </IconButton>
@@ -189,8 +215,8 @@ export default function CategoryFolderPanel({
                       mt: 0.5,
                       display: "block",
                     }}
-                  >                   
-                   {formatCreatedAt(cat.created_at ?? "")}
+                  >
+                    {formatCreatedAt(cat.created_at ?? "")}
                   </Typography>
                 </Box>
               );
@@ -207,6 +233,7 @@ export default function CategoryFolderPanel({
           setMenuAnchorEl(null);
           setMenuCategoryId(null);
         }}
+        disableAutoFocusItem
         slotProps={{
           paper: {
             sx: {
@@ -233,6 +260,7 @@ export default function CategoryFolderPanel({
               bgcolor: "rgba(239,68,68,0.08)",
             },
           }}
+          disabled={readOnly}
         >
           <ListItemIcon sx={{ minWidth: 28 }}>
             <DeleteOutlineIcon fontSize="small" />
@@ -310,6 +338,7 @@ export default function CategoryFolderPanel({
               initialPageSize={10}
               lockedCategoryId={activeCategoryId}
               hideTopActions
+              notesScopeUserId={notesScopeUserId}
             />
           )}
         </DialogContent>

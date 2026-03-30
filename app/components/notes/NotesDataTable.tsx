@@ -30,12 +30,13 @@ import {
   Typography,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import CloseIcon from "@mui/icons-material/Close";
 import CategoryOutlinedIcon from "@mui/icons-material/CategoryOutlined";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 
 import { getNotes } from "@/app/(dashboard)/actions/notes/getNotes";
+import { getNotesForUser } from "@/app/(dashboard)/actions/admin/getNotesForUser";
 import { deleteNote } from "@/app/(dashboard)/actions/notes/deleteNote";
 import { updateNote } from "@/app/(dashboard)/actions/notes/updateNote";
 import type { NoteWithCategory, NoteCategory } from "@/app/(dashboard)/actions/notes/types";
@@ -60,6 +61,9 @@ type Props = {
   openCategoryModalSignal?: number;
   recentlyDeletedCategoryId?: string | null;
   onCategoriesUpdated?: (categories: NoteCategory[]) => void;
+  readOnly?: boolean;
+  /** When set (admin viewing another user), refetch uses getNotesForUser instead of getNotes. */
+  notesScopeUserId?: string;
 };
 
 function formatCreatedAt(value: string) {
@@ -86,6 +90,8 @@ export default function NotesDataTable({
   openCategoryModalSignal,
   recentlyDeletedCategoryId,
   onCategoriesUpdated,
+  readOnly = false,
+  notesScopeUserId,
 }: Props) {
   const [data, setData] = useState<NoteWithCategory[]>(initialData);
   const [total, setTotal] = useState(initialTotal);
@@ -144,15 +150,17 @@ export default function NotesDataTable({
 
   useEffect(() => {
     if (typeof openCreateNoteSignal === "number") {
+      if (readOnly) return;
       setNoteModalOpen(true);
     }
-  }, [openCreateNoteSignal]);
+  }, [openCreateNoteSignal, readOnly]);
 
   useEffect(() => {
     if (typeof openCategoryModalSignal === "number") {
+      if (readOnly) return;
       setCategoryModalOpen(true);
     }
-  }, [openCategoryModalSignal]);
+  }, [openCategoryModalSignal, readOnly]);
 
   useEffect(() => {
     if (!recentlyDeletedCategoryId) return;
@@ -181,14 +189,25 @@ export default function NotesDataTable({
     }) => {
       setLoading(true);
       try {
-        const res = await getNotes({
-          page: next.pageIndex,
-          pageSize: next.pageSize,
-          search: next.search,
-          fromDate: next.fromDate,
-          toDate: next.toDate,
-          categoryId: lockedCategoryId ?? null,
-        });
+        const scoped = (notesScopeUserId ?? "").trim();
+        const res = scoped
+          ? await getNotesForUser({
+              userId: scoped,
+              page: next.pageIndex,
+              pageSize: next.pageSize,
+              search: next.search,
+              fromDate: next.fromDate,
+              toDate: next.toDate,
+              categoryId: lockedCategoryId ?? null,
+            })
+          : await getNotes({
+              page: next.pageIndex,
+              pageSize: next.pageSize,
+              search: next.search,
+              fromDate: next.fromDate,
+              toDate: next.toDate,
+              categoryId: lockedCategoryId ?? null,
+            });
         setData(res.data);
         setTotal(res.total);
 
@@ -203,7 +222,7 @@ export default function NotesDataTable({
         setLoading(false);
       }
     },
-    [lockedCategoryId, showToast]
+    [notesScopeUserId, lockedCategoryId, showToast]
   );
 
   useEffect(() => {
@@ -214,7 +233,8 @@ export default function NotesDataTable({
   }, [pageIndex, pageSize, search, fromDate, toDate, refetch]);
 
   const columns = useMemo<ColumnDef<NoteWithCategory>[]>(
-    () => [
+    () => {
+      const base: ColumnDef<NoteWithCategory>[] = [
       {
         accessorKey: "title",
         header: "Title",
@@ -268,39 +288,46 @@ export default function NotesDataTable({
           </Typography>
         ),
       },
-      {
-        id: "actions",
-        header: () => <Box sx={{ textAlign: "right", pr: 1 }}>Actions</Box>,
-        cell: ({ row }) => (
-          <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 0.5 }}>
-            <IconButton
-              aria-label="Edit note"
-              onClick={(e) => {
-                e.stopPropagation();
-                setNoteToEdit(row.original);
-                setEditModalOpen(true);
-              }}
-              size="small"
-              sx={{ color: "text.secondary" }}
-            >
-              <EditOutlinedIcon fontSize="small" />
-            </IconButton>
-            <IconButton
-              aria-label="Delete note"
-              onClick={(e) => {
-                e.stopPropagation();
-                setNoteToDelete(row.original);
-              }}
-              size="small"
-              sx={{ color: "error.main" }}
-            >
-              <DeleteOutlineIcon fontSize="small" />
-            </IconButton>
-          </Box>
-        ),
-      },
-    ],
-    [categoryColorIndex]
+      ];
+
+      if (readOnly) return base;
+
+      return [
+        ...base,
+        {
+          id: "actions",
+          header: () => <Box sx={{ textAlign: "right", pr: 1 }}>Actions</Box>,
+          cell: ({ row }) => (
+            <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 0.5 }}>
+              <IconButton
+                aria-label="Edit note"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setNoteToEdit(row.original);
+                  setEditModalOpen(true);
+                }}
+                size="small"
+                sx={{ color: "text.secondary" }}
+              >
+                <EditOutlinedIcon fontSize="small" />
+              </IconButton>
+              <IconButton
+                aria-label="Delete note"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setNoteToDelete(row.original);
+                }}
+                size="small"
+                sx={{ color: "error.main" }}
+              >
+                <DeleteOutlineIcon fontSize="small" />
+              </IconButton>
+            </Box>
+          ),
+        },
+      ];
+    },
+    [categoryColorIndex, readOnly]
   );
 
   const table = useReactTable({
@@ -553,57 +580,59 @@ export default function NotesDataTable({
         </DialogContent>
       </Dialog>
 
-      <Dialog
-        open={editModalOpen}
-        onClose={() => setEditModalOpen(false)}
-        fullWidth
-        maxWidth="sm"
-        PaperProps={{
-          sx: {
-            borderRadius: 2,
-            boxShadow: "0 18px 48px rgba(15,23,42,0.16)",
-          },
-        }}
-      >
-        <DialogTitle sx={{ pr: 6, pb: 1, fontWeight: 700 }}>
-          Edit Note
-          <IconButton
-            aria-label="Close"
-            onClick={() => setEditModalOpen(false)}
-            sx={{ position: "absolute", right: 12, top: 12 }}
-          >
-            <CloseIcon fontSize="small" />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent sx={{ pt: 2.5 }}>
-          <CreateNoteForm
-            categories={categoriesState}
-            onOpenCategoryModal={() => setCategoryModalOpen(true)}
-            onCancel={() => setEditModalOpen(false)}
-            submitLabel="Save changes"
-            disableSubmitIfUnchanged
-            submitAction={async (input) => {
-              if (!noteToEdit) return { error: "Missing note" };
-              return updateNote({ id: noteToEdit.id, ...input });
-            }}
-            initialValues={{
-              title: noteToEdit?.title ?? "",
-              content: noteToEdit?.content ?? "",
-              categoryId: noteToEdit?.category_id ?? "",
-            }}
-            onSaved={async (updated) => {
-              setEditModalOpen(false);
-              showToast("Note updated successfully", "success");
-              setData((prev) => prev.map((n) => (n.id === updated.id ? updated : n)));
+      {!readOnly && (
+        <Dialog
+          open={editModalOpen}
+          onClose={() => setEditModalOpen(false)}
+          fullWidth
+          maxWidth="sm"
+          PaperProps={{
+            sx: {
+              borderRadius: 2,
+              boxShadow: "0 18px 48px rgba(15,23,42,0.16)",
+            },
+          }}
+        >
+          <DialogTitle sx={{ pr: 6, pb: 1, fontWeight: 700 }}>
+            Edit Note
+            <IconButton
+              aria-label="Close"
+              onClick={() => setEditModalOpen(false)}
+              sx={{ position: "absolute", right: 12, top: 12 }}
+            >
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent sx={{ pt: 2.5 }}>
+            <CreateNoteForm
+              categories={categoriesState}
+              onOpenCategoryModal={() => setCategoryModalOpen(true)}
+              onCancel={() => setEditModalOpen(false)}
+              submitLabel="Save changes"
+              disableSubmitIfUnchanged
+              submitAction={async (input) => {
+                if (!noteToEdit) return { error: "Missing note" };
+                return updateNote({ id: noteToEdit.id, ...input });
+              }}
+              initialValues={{
+                title: noteToEdit?.title ?? "",
+                content: noteToEdit?.content ?? "",
+                categoryId: noteToEdit?.category_id ?? "",
+              }}
+              onSaved={async (updated) => {
+                setEditModalOpen(false);
+                showToast("Note updated successfully", "success");
+                setData((prev) => prev.map((n) => (n.id === updated.id ? updated : n)));
 
-              // If edit happened outside current filtered list, re-sync.
-              if (search.trim() !== "") {
-                await refetch({ pageIndex, pageSize, search, fromDate, toDate });
-              }
-            }}
-          />
-        </DialogContent>
-      </Dialog>
+                // If edit happened outside current filtered list, re-sync.
+                if (search.trim() !== "") {
+                  await refetch({ pageIndex, pageSize, search, fromDate, toDate });
+                }
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
 
       <NoteDetailModal
         open={Boolean(noteToView)}
@@ -611,56 +640,60 @@ export default function NotesDataTable({
         onClose={() => setNoteToView(null)}
       />
 
-      <CreateCategoryModal
-        open={categoryModalOpen}
-        categories={categoriesState}
-        onClose={() => setCategoryModalOpen(false)}
-        onCategoriesUpdated={(next) => {
-          const prevIds = new Set(categoriesState.map((c) => c.id));
-          const nextIds = new Set(next.map((c) => c.id));
-          const removedIds = [...prevIds].filter((id) => !nextIds.has(id));
+      {!readOnly && (
+        <CreateCategoryModal
+          open={categoryModalOpen}
+          categories={categoriesState}
+          onClose={() => setCategoryModalOpen(false)}
+          onCategoriesUpdated={(next) => {
+            const prevIds = new Set(categoriesState.map((c) => c.id));
+            const nextIds = new Set(next.map((c) => c.id));
+            const removedIds = [...prevIds].filter((id) => !nextIds.has(id));
 
-          setCategoriesState(next);
-          onCategoriesUpdated?.(next);
-          if (removedIds.length > 0) {
-            setData((prev) =>
-              prev.map((note) =>
-                removedIds.includes(note.category_id)
-                  ? { ...note, category_id: "", category_name: "Uncategorized" }
-                  : note
-              )
-            );
-          }
-        }}
-        onSuccessMessage={(m) => showToast(m, "success")}
-        onErrorMessage={(m) => showToast(m, "error")}
-      />
-
-      <ConfirmationModal
-        open={Boolean(noteToDelete)}
-        onClose={() => setNoteToDelete(null)}
-        title="Delete Note?"
-        subtitle="This action cannot be undone"
-        confirmText="Delete"
-        confirmColor="error"
-        loading={deletingNote}
-        onConfirm={async () => {
-          if (!noteToDelete) return;
-          setDeletingNote(true);
-          try {
-            const res = await deleteNote({ id: noteToDelete.id });
-            if ("error" in res) {
-              showToast(res.error, "error");
-              return;
+            setCategoriesState(next);
+            onCategoriesUpdated?.(next);
+            if (removedIds.length > 0) {
+              setData((prev) =>
+                prev.map((note) =>
+                  removedIds.includes(note.category_id)
+                    ? { ...note, category_id: "", category_name: "Uncategorized" }
+                    : note
+                )
+              );
             }
-            showToast("Note deleted", "success");
-            setNoteToDelete(null);
-            await refetch({ pageIndex, pageSize, search, fromDate, toDate });
-          } finally {
-            setDeletingNote(false);
-          }
-        }}
-      />
+          }}
+          onSuccessMessage={(m) => showToast(m, "success")}
+          onErrorMessage={(m) => showToast(m, "error")}
+        />
+      )}
+
+      {!readOnly && (
+        <ConfirmationModal
+          open={Boolean(noteToDelete)}
+          onClose={() => setNoteToDelete(null)}
+          title="Delete Note?"
+          subtitle="This action cannot be undone"
+          confirmText="Delete"
+          confirmColor="error"
+          loading={deletingNote}
+          onConfirm={async () => {
+            if (!noteToDelete) return;
+            setDeletingNote(true);
+            try {
+              const res = await deleteNote({ id: noteToDelete.id });
+              if ("error" in res) {
+                showToast(res.error, "error");
+                return;
+              }
+              showToast("Note deleted", "success");
+              setNoteToDelete(null);
+              await refetch({ pageIndex, pageSize, search, fromDate, toDate });
+            } finally {
+              setDeletingNote(false);
+            }
+          }}
+        />
+      )}
 
       <Snackbar
         open={snackbarOpen}
