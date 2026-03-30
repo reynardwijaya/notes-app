@@ -2,18 +2,18 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { TextField, Button, Box, Alert, CircularProgress } from "@mui/material";
+import { TextField, Button, Box, CircularProgress } from "@mui/material";
+import { useToast } from "@/app/components/ui/ToastProvider";
 
 export default function LoginForm() {
   const router = useRouter();
+  const toast = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
     setLoading(true);
 
     try {
@@ -28,13 +28,14 @@ export default function LoginForm() {
 
       if (!res.ok) {
         console.log("LOGIN ERROR RESPONSE:", data);
-        setError(data.error || "Login failed");
+        toast.error(String(data.error ?? "Login failed"));
         setLoading(false);
         return;
       }
       const role = data.user.role;
       setLoading(false);
 
+      toast.success("Welcome back");
       if (role === "admin") {
         router.push("/admin");
       } else {
@@ -42,15 +43,13 @@ export default function LoginForm() {
       }
     } catch (err) {
       console.error("LOGIN CATCH ERROR:", err);
-      setError("Login failed");
+      toast.error("Login failed");
       setLoading(false);
     }
   };
 
   return (
     <>
-      {error && <Alert severity="error">{error}</Alert>}
-
       <Box
         component="form"
         onSubmit={handleLogin}

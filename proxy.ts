@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const res = NextResponse.next();
 
   const supabase = createServerClient(
@@ -20,7 +20,7 @@ export async function middleware(req: NextRequest) {
           res.cookies.set(name, "", options);
         },
       },
-    },
+    }
   );
 
   const {
@@ -30,10 +30,7 @@ export async function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
 
   // Belum login
-  if (
-    !session &&
-    (pathname.startsWith("/notes") || pathname.startsWith("/admin"))
-  ) {
+  if (!session && (pathname.startsWith("/notes") || pathname.startsWith("/admin"))) {
     return NextResponse.redirect(new URL("/auth/login", req.url));
   }
 
@@ -74,6 +71,10 @@ export async function middleware(req: NextRequest) {
   return res;
 }
 
+// Backwards-compatible alias (older convention).
+export const middleware = proxy;
+
 export const config = {
   matcher: ["/auth/:path*", "/notes/:path*", "/admin/:path*"],
 };
+

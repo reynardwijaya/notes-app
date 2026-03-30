@@ -12,7 +12,7 @@ interface TopBarProps {
 }
 
 export default function TopBarClient({ pageTitle, email, role }: TopBarProps) {
-  const [isPending, startTransition] = useTransition();
+  const [isPending] = useTransition();
 
   return (
     <header className="w-full bg-white/80 backdrop-blur-sm border-b border-slate-100 px-6 py-4 flex justify-between items-center shadow-sm sticky top-0 z-40">

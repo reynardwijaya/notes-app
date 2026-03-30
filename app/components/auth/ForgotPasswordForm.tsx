@@ -2,43 +2,28 @@
 
 import { useState } from "react";
 import { resetPassword } from "@/lib/auth";
-import { TextField, Button, Box, Alert } from "@mui/material";
+import { TextField, Button, Box } from "@mui/material";
+import { useToast } from "@/app/components/ui/ToastProvider";
 
 export default function ForgotPasswordForm() {
+  const toast = useToast();
   const [email, setEmail] = useState("");
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    setError(null);
-    setMessage(null);
-
     const { error } = await resetPassword(email);
 
     if (error) {
-      setError(error.message);
+      toast.error(error.message);
       return;
     }
 
-    setMessage("Check your email for reset link!");
+    toast.success("Check your email for reset link!");
   };
 
   return (
     <>
-      {error && (
-        <Alert severity="error" sx={{ mt: 1 }}>
-          {error}
-        </Alert>
-      )}
-
-      {message && (
-        <Alert severity="success" sx={{ mt: 1 }}>
-          {message}
-        </Alert>
-      )}
-
       <Box
         component="form"
         onSubmit={handleReset}

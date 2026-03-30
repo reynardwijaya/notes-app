@@ -19,7 +19,10 @@ import { deleteCategory } from "@/app/(dashboard)/actions/categories/deleteCateg
 import { getCategoryUsage } from "@/app/(dashboard)/actions/categories/getCategoryUsage";
 import ConfirmationModal from "@/app/components/notes/ConfirmationModal";
 import type { NoteCategory } from "@/app/(dashboard)/actions/notes/types";
-import { buildCategoryColorIndex, getPastelByIndex } from "@/utils/categoryColors";
+import {
+  buildCategoryColorIndex,
+  getPastelByIndex,
+} from "@/utils/categoryColors";
 
 type Props = {
   open: boolean;
@@ -42,7 +45,9 @@ export default function CreateCategoryModal({
   const [saving, setSaving] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const [deleteUsage, setDeleteUsage] = useState<{ titles: string[] } | null>(null);
+  const [deleteUsage, setDeleteUsage] = useState<{ titles: string[] } | null>(
+    null,
+  );
   const [deleteUsageLoading, setDeleteUsageLoading] = useState(false);
 
   const categoryColorIndex = buildCategoryColorIndex(categories);
@@ -94,6 +99,7 @@ export default function CreateCategoryModal({
           sx: {
             borderRadius: 2,
             boxShadow: "0 18px 48px rgba(15,23,42,0.16)",
+            overflow: "visible",
           },
         }}
       >
@@ -108,17 +114,27 @@ export default function CreateCategoryModal({
           </IconButton>
         </DialogTitle>
 
-        <DialogContent sx={{ pt: 2 }}>
+        <DialogContent
+          sx={{
+            pt: 1,
+            overflow: "visible",
+          }}
+        >
           {categories.length > 0 && (
             <Box sx={{ mb: 3 }}>
               <Typography
                 variant="body2"
-                sx={{ color: "text.secondary", mb: 1.25, fontWeight: 500 }}
+                sx={{
+                  color: "text.secondary",
+                  mb: 1.25,
+                  fontWeight: 500,
+                  wordBreak: "break-word",
+                }}
               >
                 Existing categories
               </Typography>
               <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-                {categories.map((cat) => (
+                {categories.map((cat) =>
                   (() => {
                     const idx = categoryColorIndex.get(cat.id) ?? 0;
                     const color = getPastelByIndex(idx);
@@ -160,8 +176,8 @@ export default function CreateCategoryModal({
                         }}
                       />
                     );
-                  })()
-                ))}
+                  })(),
+                )}
               </Box>
             </Box>
           )}
@@ -226,4 +242,3 @@ export default function CreateCategoryModal({
     </>
   );
 }
-

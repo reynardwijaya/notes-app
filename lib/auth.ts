@@ -9,7 +9,10 @@ export async function register(email: string, password: string) {
 }
 
 export async function resetPassword(email: string) {
+  const origin =
+    typeof window !== "undefined" ? window.location.origin : "http://localhost:3000";
+
   return await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: "http://localhost:3000/auth/login",
+    redirectTo: `${origin}/auth/reset-password`,
   });
 }

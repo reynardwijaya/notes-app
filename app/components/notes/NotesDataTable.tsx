@@ -342,7 +342,15 @@ export default function NotesDataTable({
     <Box className="space-y-6">
       {!hideToolbar && (
         <Box className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <Box className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <Box
+            sx={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 1.5,
+              alignItems: "center",
+              width: "100%",
+            }}
+          >
           <TextField
             fullWidth
             value={search}
@@ -360,7 +368,8 @@ export default function NotesDataTable({
               ),
             }}
             sx={{
-              maxWidth: 420,
+              maxWidth: { xs: "100%", sm: 420 },
+              flex: "1 1 320px",
               "& .MuiOutlinedInput-root": { borderRadius: 2.5 },
             }}
           />
@@ -377,6 +386,7 @@ export default function NotesDataTable({
             InputLabelProps={{ shrink: true }}
             sx={{
               minWidth: 170,
+              flex: "0 1 170px",
               "& .MuiOutlinedInput-root": { borderRadius: 2.5 },
             }}
           />
@@ -392,9 +402,32 @@ export default function NotesDataTable({
             InputLabelProps={{ shrink: true }}
             sx={{
               minWidth: 170,
+              flex: "0 1 170px",
               "& .MuiOutlinedInput-root": { borderRadius: 2.5 },
             }}
           />
+
+          <IconButton
+            aria-label="Reset date filters"
+            size="small"
+            onClick={() => {
+              if (fromDate === "" && toDate === "") return;
+              setFromDate("");
+              setToDate("");
+              setPageIndex(0);
+            }}
+            sx={{
+              borderRadius: 2,
+              border: "1px solid",
+              borderColor: "divider",
+              width: 36,
+              height: 36,
+              flex: "0 0 auto",
+              color: "text.secondary",
+            }}
+          >
+            <CloseIcon fontSize="small" />
+          </IconButton>
         </Box>
 
         {!hideTopActions && (

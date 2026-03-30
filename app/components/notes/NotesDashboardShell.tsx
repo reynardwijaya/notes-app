@@ -9,7 +9,7 @@ import type { NoteCategory, NoteWithCategory } from "@/app/(dashboard)/actions/n
 import NotesDataTable from "@/app/components/notes/NotesDataTable";
 import CategoryFolderPanel from "@/app/components/notes/CategoryFolderPanel";
 
-type CategoryWithMeta = NoteCategory & { created_at?: string };
+type CategoryWithMeta = NoteCategory & { created_at?: string; total_notes?: number };
 
 type Props = {
   initialData: NoteWithCategory[];
@@ -43,8 +43,13 @@ export default function NotesDashboardShell({
 
   const categoryRows = useMemo(
     () =>
-      categoriesState.map((c) => ({ id: c.id, name: c.name, created_at: c.created_at })),
-    [categoriesState]
+      categoriesState.map((c) => ({
+        id: c.id,
+        name: c.name,
+        created_at: c.created_at,
+        total_notes: Number(c.total_notes ?? 0),
+      })),
+    [categoriesState],
   );
 
   return (

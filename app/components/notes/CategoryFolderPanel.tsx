@@ -28,7 +28,7 @@ import {
 import ConfirmationModal from "@/app/components/notes/ConfirmationModal";
 import { deleteCategory } from "@/app/(dashboard)/actions/categories/deleteCategory";
 
-type CategoryWithMeta = NoteCategory & { created_at?: string };
+type CategoryWithMeta = NoteCategory & { created_at?: string; total_notes?: number };
 
 type Props = {
   categories: CategoryWithMeta[];
@@ -78,19 +78,19 @@ export default function CategoryFolderPanel({
     <>
       <Box
         sx={{
-          borderRadius: 2,
+          borderRadius: 3,
           border: "1px solid",
           borderColor: "divider",
-          boxShadow: "0 8px 24px rgba(15,23,42,0.05)",
-          p: 2.25,
+          boxShadow: "0 6px 18px rgba(15,23,42,0.05)",
+          p: 2,
           bgcolor: "background.paper",
         }}
       >
         <Typography
           variant="subtitle1"
           sx={{
-            fontWeight: 700,
-            mb: 1.75,
+            fontWeight: 600,
+            mb: 1.5,
             color: "text.primary",
           }}
         >
@@ -155,15 +155,18 @@ export default function CategoryFolderPanel({
                     gridColumn: { xs: "span 12", sm: "span 6", lg: "span 4" },
                     cursor: "pointer",
                     borderRadius: 3,
-                    p: 2,
+                    p: 1.75,
                     bgcolor: color.bg,
                     border: "1px solid",
                     borderColor: color.border,
-                    boxShadow: "0 10px 24px rgba(15,23,42,0.06)",
+                    boxShadow: "0 6px 16px rgba(15,23,42,0.06)",
                     transition: "all 120ms ease",
+                    minHeight: 110,
+                    display: "flex",
+                    flexDirection: "column",
                     "&:hover": {
                       transform: "translateY(-2px)",
-                      boxShadow: "0 16px 32px rgba(15,23,42,0.10)",
+                      boxShadow: "0 10px 20px rgba(15,23,42,0.09)",
                     },
                   }}
                 >
@@ -175,31 +178,31 @@ export default function CategoryFolderPanel({
                   >
                     <FolderOutlinedIcon sx={{ color: color.text }} />
 
-                    <IconButton
-                      size="small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (readOnly) return;
-                        setMenuAnchorEl(e.currentTarget);
-                        setMenuCategoryId(cat.id);
-                      }}
-                      sx={{
-                        color: "text.secondary",
-                        "&:hover": {
-                          bgcolor: "rgba(0,0,0,0.05)",
-                        },
-                      }}
-                      disabled={readOnly}
-                    >
-                      <MoreHorizIcon fontSize="small" />
-                    </IconButton>
+                    {!readOnly && (
+                      <IconButton
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setMenuAnchorEl(e.currentTarget);
+                          setMenuCategoryId(cat.id);
+                        }}
+                        sx={{
+                          color: "text.secondary",
+                          "&:hover": {
+                            bgcolor: "rgba(0,0,0,0.05)",
+                          },
+                        }}
+                      >
+                        <MoreHorizIcon fontSize="small" />
+                      </IconButton>
+                    )}
                   </Box>
 
                   <Typography
                     variant="subtitle2"
                     sx={{
-                      mt: 1.25,
-                      fontWeight: 800,
+                      mt: 1,
+                      fontWeight: 600,
                       color: color.text,
                     }}
                   >
@@ -210,13 +213,29 @@ export default function CategoryFolderPanel({
                     variant="caption"
                     sx={{
                       color: "text.secondary",
-                      opacity: 0.7,
-                      fontSize: 11,
+                      opacity: 0.85,
+                      fontSize: 12,
                       mt: 0.5,
                       display: "block",
                     }}
                   >
                     {formatCreatedAt(cat.created_at ?? "")}
+                  </Typography>
+
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      mt: "auto",
+                      pt: 1,
+                      textAlign: "right",
+                      color: "text.secondary",
+                      fontSize: 12,
+                      fontWeight: 500,
+                    }}
+                  >
+                    {`${Number(cat.total_notes ?? 0)} ${
+                      Number(cat.total_notes ?? 0) === 1 ? "note" : "notes"
+                    }`}
                   </Typography>
                 </Box>
               );
@@ -226,81 +245,84 @@ export default function CategoryFolderPanel({
       </Box>
 
       {/* ================= MENU ================= */}
-      <Menu
-        open={Boolean(menuAnchorEl)}
-        anchorEl={menuAnchorEl}
-        onClose={() => {
-          setMenuAnchorEl(null);
-          setMenuCategoryId(null);
-        }}
-        disableAutoFocusItem
-        slotProps={{
-          paper: {
-            sx: {
-              borderRadius: 2,
-              boxShadow: "0 16px 40px rgba(15,23,42,0.14)",
-              border: "1px solid",
-              borderColor: "divider",
-              minWidth: 180,
-              py: 0.5,
-            },
-          },
-        }}
-      >
-        <MenuItem
-          onClick={() => {
-            setDeleteOpen(true);
+      {!readOnly && (
+        <Menu
+          open={Boolean(menuAnchorEl)}
+          anchorEl={menuAnchorEl}
+          onClose={() => {
             setMenuAnchorEl(null);
+            setMenuCategoryId(null);
           }}
-          sx={{
-            borderRadius: 1.5,
-            mx: 0.75,
-            my: 0.25,
-            "&:hover": {
-              bgcolor: "rgba(239,68,68,0.08)",
+          disableAutoFocusItem
+          slotProps={{
+            paper: {
+              sx: {
+                borderRadius: 2,
+                boxShadow: "0 16px 40px rgba(15,23,42,0.14)",
+                border: "1px solid",
+                borderColor: "divider",
+                minWidth: 180,
+                py: 0.5,
+              },
             },
           }}
-          disabled={readOnly}
         >
-          <ListItemIcon sx={{ minWidth: 28 }}>
-            <DeleteOutlineIcon fontSize="small" />
-          </ListItemIcon>
-          Delete Category
-        </MenuItem>
-      </Menu>
+          <MenuItem
+            onClick={() => {
+              setDeleteOpen(true);
+              setMenuAnchorEl(null);
+            }}
+            sx={{
+              borderRadius: 1.5,
+              mx: 0.75,
+              my: 0.25,
+              "&:hover": {
+                bgcolor: "rgba(239,68,68,0.08)",
+              },
+            }}
+          >
+            <ListItemIcon sx={{ minWidth: 28 }}>
+              <DeleteOutlineIcon fontSize="small" />
+            </ListItemIcon>
+            Delete Category
+          </MenuItem>
+        </Menu>
+      )}
 
       {/* ================= DELETE MODAL ================= */}
-      <ConfirmationModal
-        open={deleteOpen}
-        onClose={() => setDeleteOpen(false)}
-        title="Delete Category?"
-        subtitle="Are you sure you want to delete this category?"
-        confirmText="Delete"
-        confirmColor="error"
-        loading={deleteLoading}
-        onConfirm={async () => {
-          if (!menuCategoryId) return;
+      {!readOnly && (
+        <ConfirmationModal
+          open={deleteOpen}
+          onClose={() => setDeleteOpen(false)}
+          title="Delete Category?"
+          subtitle="Are you sure you want to delete this category?"
+          confirmText="Delete"
+          confirmColor="error"
+          loading={deleteLoading}
+          onConfirm={async () => {
+            if (!menuCategoryId) return;
 
-          setDeleteLoading(true);
-          try {
-            const res = await deleteCategory({ id: menuCategoryId });
-            if ("error" in res) return;
+            setDeleteLoading(true);
+            try {
+              const res = await deleteCategory({ id: menuCategoryId });
+              if ("error" in res) return;
 
-            const next = categories.filter((c) => c.id !== menuCategoryId);
+              const next = categories.filter((c) => c.id !== menuCategoryId);
 
-            onCategoriesUpdated?.(next);
-            onCategoryDeleted?.(menuCategoryId);
+              onCategoriesUpdated?.(next);
+              onCategoryDeleted?.(menuCategoryId);
 
-            if (activeCategoryId === menuCategoryId) {
-              setActiveCategoryId(null);
+              if (activeCategoryId === menuCategoryId) {
+                setActiveCategoryId(null);
+              }
+
+              setDeleteOpen(false);
+            } finally {
+              setDeleteLoading(false);
             }
-
-            setDeleteOpen(false);
-          } finally {
-            setDeleteLoading(false);
-          }
-        }}
-      />
+          }}
+        />
+      )}
 
       {/* ================= MODAL TABLE ================= */}
       <Dialog

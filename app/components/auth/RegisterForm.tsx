@@ -2,17 +2,17 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { TextField, Button, Box, Alert } from "@mui/material";
+import { TextField, Button, Box } from "@mui/material";
+import { useToast } from "@/app/components/ui/ToastProvider";
 
 export default function RegisterForm() {
   const router = useRouter();
+  const toast = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
 
     const res = await fetch("/api/auth-register", {
       method: "POST",
@@ -23,22 +23,16 @@ export default function RegisterForm() {
     const data = await res.json();
 
     if (!res.ok) {
-      setError(data.error || "Register failed");
+      toast.error(String(data.error ?? "Register failed"));
       return;
     }
 
-    alert("Register success! You can now login.");
+    toast.success("Register success! You can now login.");
     router.push("/auth/login");
   };
 
   return (
     <>
-      {error && (
-        <Alert severity="error" sx={{ mt: 1 }}>
-          {error}
-        </Alert>
-      )}
-
       <Box
         component="form"
         onSubmit={handleRegister}

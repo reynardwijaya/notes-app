@@ -6,6 +6,7 @@ export type AdminCategoryRow = {
   id: string;
   name: string;
   created_at: string;
+  total_notes: number;
 };
 
 export async function getCategoriesForUser(input: {
@@ -21,7 +22,7 @@ export async function getCategoriesForUser(input: {
 
   const { data, error } = await supabase
     .from("note_categories")
-    .select("id,name,created_at")
+    .select("id,name,created_at,notes(count)")
     .eq("user_id", safeUserId)
     .order("name", { ascending: true });
 
@@ -32,6 +33,9 @@ export async function getCategoriesForUser(input: {
     id: String((r as { id: unknown }).id ?? ""),
     name: String((r as { name: unknown }).name ?? ""),
     created_at: String((r as { created_at: unknown }).created_at ?? ""),
+    total_notes: Number(
+      (r as { notes?: Array<{ count?: number }> | null }).notes?.[0]?.count ?? 0,
+    ),
   }));
 }
 
