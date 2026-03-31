@@ -21,7 +21,6 @@ export async function getAdminUsers(): Promise<
 
   const { supabase } = admin;
 
-  // Requires FK relationships so PostgREST can embed counts.
   const { data, error } = await supabase
     .from("users")
     .select("id,email,role,created_at,notes(count),note_categories(count)")
