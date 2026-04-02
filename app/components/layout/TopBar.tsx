@@ -1,4 +1,4 @@
-import TopBarClient from "./TopBarClient";
+import TopBarClient from "../TopBarClient";
 
 interface TopBarProps {
   pageTitle: string;

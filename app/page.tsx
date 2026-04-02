@@ -174,7 +174,7 @@ export default function Home() {
             <Button
               variant="contained"
               size="large"
-              onClick={() => router.push("/auth/login")}
+              onClick={() => router.push("/login")}
               sx={{
                 px: 4,
                 py: 1.25,
@@ -202,7 +202,7 @@ export default function Home() {
             <Button
               variant="text"
               size="large"
-              onClick={() => router.push("/auth/register")}
+              onClick={() => router.push("/register")}
               sx={{
                 px: 3.5,
                 py: 1.25,

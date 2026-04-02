@@ -1,10 +1,10 @@
 import AppLayout from "@/app/components/layout/AppLayout";
-import NotesDashboardShell from "@/app/components/notes/NotesDashboardShell";
+import NotesDashboardShell from "@/app/(dashboard)/notes/components/NotesDashboardShell";
 import { createClient } from "@/lib/supabase/server";
-import { getUserOverview } from "@/app/(dashboard)/actions/admin/getUserOverview";
-import { getNotesForUser } from "@/app/(dashboard)/actions/admin/getNotesForUser";
-import { getCategoriesForUser } from "@/app/(dashboard)/actions/admin/getCategoriesForUser";
-import NoDataAvailableDialog from "@/app/components/admin/NoDataAvailableDialog";
+import { getUserOverview } from "@/app/(dashboard)/admin/utils/getUserOverview";
+import { getNotesForUser } from "@/app/(dashboard)/admin/utils/getNotesForUser";
+import { getCategoriesForUser } from "@/app/(dashboard)/admin/utils/getCategoriesForUser";
+import NoDataAvailableDialog from "@/app/(dashboard)/admin/components/NoDataAvailableDialog";
 import Link from "next/link";
 
 export default async function AdminUserDetailPage({

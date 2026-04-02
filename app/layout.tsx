@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { ToastProvider } from "@/app/components/ui/ToastProvider";
+import { ToastProvider } from "@/app/components/ToastProvider";
 
 export const metadata: Metadata = {
   title: "Create Next App",
