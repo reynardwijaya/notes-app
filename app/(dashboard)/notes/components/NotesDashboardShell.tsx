@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   Box,
   Button,
@@ -23,10 +23,17 @@ type CategoryWithMeta = NoteCategory & {
   total_notes?: number;
 };
 
+type CategoryFolderInitial = {
+  rows: CategoryWithMeta[];
+  total: number;
+  pageSize: number;
+};
+
 type Props = {
   initialData: NoteWithCategory[];
   initialTotal: number;
   categories: CategoryWithMeta[];
+  categoryFolderInitial: CategoryFolderInitial;
   readOnly?: boolean;
   hideCreateButtons?: boolean;
   notesScopeUserId?: string;
@@ -36,12 +43,31 @@ export default function NotesDashboardShell({
   initialData,
   initialTotal,
   categories,
+  categoryFolderInitial,
   readOnly = false,
   hideCreateButtons = false,
   notesScopeUserId,
 }: Props) {
   const [categoriesState, setCategoriesState] =
     useState<CategoryWithMeta[]>(categories);
+  const [folderInvalidate, setFolderInvalidate] = useState(0);
+
+  const bumpFolderInvalidate = useCallback(() => {
+    setFolderInvalidate((n) => n + 1);
+  }, []);
+
+  const handleCategoriesUpdated = useCallback(
+    (next: NoteCategory[]) => {
+      setCategoriesState(
+        next.map((c) => ({
+          id: c.id,
+          name: c.name,
+        })),
+      );
+      bumpFolderInvalidate();
+    },
+    [bumpFolderInvalidate],
+  );
   const [search, setSearch] = useState("");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
@@ -211,7 +237,7 @@ export default function NotesDashboardShell({
             openCreateNoteSignal={openCreateNoteSignal}
             openCategoryModalSignal={openCategoryModalSignal}
             recentlyDeletedCategoryId={deletedCategoryId}
-            onCategoriesUpdated={(next) => setCategoriesState(next)}
+            onCategoriesUpdated={handleCategoriesUpdated}
             readOnly={readOnly}
             notesScopeUserId={notesScopeUserId}
           />
@@ -219,10 +245,18 @@ export default function NotesDashboardShell({
 
         <Box sx={{ gridColumn: { xs: "1 / -1", lg: "span 6" } }}>
           <CategoryFolderPanel
-            categories={categoryRows}
+            categoryOptionsForNotes={categoryRows.map((c) => ({
+              id: c.id,
+              name: c.name,
+            }))}
+            folderInitial={categoryFolderInitial}
+            folderInvalidate={folderInvalidate}
+            scopedFolderCategories={
+              notesScopeUserId ? categoryRows : undefined
+            }
             notesInitialData={[]}
             notesInitialTotal={0}
-            onCategoriesUpdated={(next) => setCategoriesState(next)}
+            onCategoriesUpdated={handleCategoriesUpdated}
             onCategoryDeleted={(categoryId) => {
               setDeletedCategoryId(categoryId);
             }}

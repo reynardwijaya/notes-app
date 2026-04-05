@@ -29,10 +29,19 @@ export default async function AdminUserDetailPage({
   const viewedUser = userRes.user;
 
   // Step 2: fetch notes and categories only after we know the user exists.
+  const FOLDER_PAGE_SIZE = 6;
+
   const [categories, initialNotes] = await Promise.all([
     getCategoriesForUser({ userId: id }),
     getNotesForUser({ userId: id, page: 0, pageSize: 10, search: "" }),
   ]);
+
+  const shellCategories = categories.map((c) => ({
+    id: c.id,
+    name: c.name,
+    created_at: c.created_at,
+    total_notes: Number(c.total_notes ?? 0),
+  }));
 
   // Step 3: empty data state is handled separately from "User not found".
   const showNoData = initialNotes.data.length === 0 && categories.length === 0;
@@ -72,12 +81,12 @@ export default async function AdminUserDetailPage({
         <NotesDashboardShell
           initialData={initialNotes.data}
           initialTotal={initialNotes.total}
-          categories={categories.map((c) => ({
-            id: c.id,
-            name: c.name,
-            created_at: c.created_at,
-            total_notes: c.total_notes,
-          }))}
+          categories={shellCategories}
+          categoryFolderInitial={{
+            rows: shellCategories.slice(0, FOLDER_PAGE_SIZE),
+            total: shellCategories.length,
+            pageSize: FOLDER_PAGE_SIZE,
+          }}
           readOnly
           hideCreateButtons
           notesScopeUserId={id}

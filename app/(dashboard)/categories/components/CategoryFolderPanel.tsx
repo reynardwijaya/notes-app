@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { TablePagination } from "@mui/material";
 import {
   Box,
   Button,
@@ -18,6 +19,7 @@ import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import CloseIcon from "@mui/icons-material/Close";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import InboxOutlinedIcon from "@mui/icons-material/InboxOutlined";
+import { getCategoriesPaginated } from "@/app/(dashboard)/categories/utils/getCategories";
 
 import type { NoteCategory } from "@/app/(dashboard)/notes/utils/types";
 import NotesDataTable from "@/app/(dashboard)/notes/components/NotesDataTable";
@@ -33,11 +35,23 @@ type CategoryWithMeta = NoteCategory & {
   total_notes?: number;
 };
 
+type FolderInitial = {
+  rows: CategoryWithMeta[];
+  total: number;
+  pageSize: number;
+};
+
 type Props = {
-  categories: CategoryWithMeta[];
+  /** Full category id/name list for nested notes UI (single source for pickers). */
+  categoryOptionsForNotes: NoteCategory[];
+  folderInitial: FolderInitial;
+  /** Incremented when the shared category list changes (create/delete) to refetch the folder page. */
+  folderInvalidate: number;
+  /** When set (admin scoped view), folder grid pages over this list on the client. */
+  scopedFolderCategories?: CategoryWithMeta[];
   notesInitialData: Parameters<typeof NotesDataTable>[0]["initialData"];
   notesInitialTotal: number;
-  onCategoriesUpdated?: (categories: CategoryWithMeta[]) => void;
+  onCategoriesUpdated?: (categories: NoteCategory[]) => void;
   onCategoryDeleted?: (categoryId: string) => void;
   onRequestCreateCategory?: () => void;
   readOnly?: boolean;
@@ -54,7 +68,10 @@ function formatCreatedAt(value: string) {
 }
 
 export default function CategoryFolderPanel({
-  categories,
+  categoryOptionsForNotes,
+  folderInitial,
+  folderInvalidate,
+  scopedFolderCategories,
   notesInitialData,
   notesInitialTotal,
   onCategoriesUpdated,
@@ -69,13 +86,84 @@ export default function CategoryFolderPanel({
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  const categoryColorIndex = useMemo(
-    () => buildCategoryColorIndex(categories),
-    [categories],
+  const [data, setData] = useState<CategoryWithMeta[]>(folderInitial.rows);
+  const [total, setTotal] = useState(folderInitial.total);
+
+  const [pageIndex, setPageIndex] = useState(0);
+  const [pageSize, setPageSize] = useState(folderInitial.pageSize);
+  const [loading, setLoading] = useState(false);
+
+  const userChangedPaging = useRef(false);
+
+  const useClientFolderPaging = Boolean(
+    notesScopeUserId && scopedFolderCategories,
   );
 
-  const activeCategory =
-    categories.find((c) => c.id === activeCategoryId) ?? null;
+  useEffect(() => {
+    if (useClientFolderPaging && scopedFolderCategories) {
+      const start = pageIndex * pageSize;
+      const slice = scopedFolderCategories.slice(start, start + pageSize);
+      setData(slice);
+      setTotal(scopedFolderCategories.length);
+      if (
+        pageIndex > 0 &&
+        slice.length === 0 &&
+        scopedFolderCategories.length > 0
+      ) {
+        setPageIndex((p) => p - 1);
+      }
+      return;
+    }
+
+    const trustServerSeed =
+      !userChangedPaging.current &&
+      folderInvalidate === 0 &&
+      pageIndex === 0 &&
+      pageSize === folderInitial.pageSize;
+
+    if (trustServerSeed) {
+      setData(folderInitial.rows);
+      setTotal(folderInitial.total);
+      return;
+    }
+
+    let cancelled = false;
+
+    (async () => {
+      setLoading(true);
+      try {
+        const res = await getCategoriesPaginated({ page: pageIndex, pageSize });
+        if (cancelled) return;
+        setData(res.data);
+        setTotal(res.total);
+        if (pageIndex > 0 && res.data.length === 0 && res.total > 0) {
+          setPageIndex((p) => p - 1);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    useClientFolderPaging,
+    scopedFolderCategories,
+    folderInvalidate,
+    pageIndex,
+    pageSize,
+    folderInitial.pageSize,
+    folderInitial.rows,
+    folderInitial.total,
+  ]);
+
+  const categoryColorIndex = useMemo(
+    () => buildCategoryColorIndex(data),
+    [data],
+  );
+
+  const activeCategory = data.find((c) => c.id === activeCategoryId) ?? null;
 
   return (
     <>
@@ -100,8 +188,20 @@ export default function CategoryFolderPanel({
           Categories
         </Typography>
 
-        {/* ================= EMPTY STATE ================= */}
-        {categories.length === 0 ? (
+        {loading ? (
+          <Box
+            sx={{
+              height: 120,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Typography variant="body2" color="text.secondary">
+              Loading categories...
+            </Typography>
+          </Box>
+        ) : data.length === 0 ? (
           <Box
             sx={{
               height: 220,
@@ -138,7 +238,6 @@ export default function CategoryFolderPanel({
             )}
           </Box>
         ) : (
-          /* ================= GRID ================= */
           <Box
             sx={{
               display: "grid",
@@ -146,7 +245,7 @@ export default function CategoryFolderPanel({
               gap: 1.5,
             }}
           >
-            {categories.map((cat) => {
+            {data.map((cat) => {
               const idx = categoryColorIndex.get(cat.id) ?? 0;
               const color = getPastelByIndex(idx);
 
@@ -245,9 +344,29 @@ export default function CategoryFolderPanel({
             })}
           </Box>
         )}
+        {total > 0 && (
+          <Box sx={{ mt: 2 }}>
+            <TablePagination
+              component="div"
+              count={total}
+              page={pageIndex}
+              onPageChange={(_, nextPage) => {
+                userChangedPaging.current = true;
+                setPageIndex(nextPage);
+              }}
+              rowsPerPage={pageSize}
+              onRowsPerPageChange={(e) => {
+                userChangedPaging.current = true;
+                const next = Number(e.target.value);
+                setPageSize(next);
+                setPageIndex(0);
+              }}
+              rowsPerPageOptions={[6, 12, 24, 48]}
+            />
+          </Box>
+        )}
       </Box>
 
-      {/* ================= MENU ================= */}
       {!readOnly && (
         <Menu
           open={Boolean(menuAnchorEl)}
@@ -292,7 +411,6 @@ export default function CategoryFolderPanel({
         </Menu>
       )}
 
-      {/* ================= DELETE MODAL ================= */}
       {!readOnly && (
         <ConfirmationModal
           open={deleteOpen}
@@ -310,9 +428,9 @@ export default function CategoryFolderPanel({
               const res = await deleteCategory({ id: menuCategoryId });
               if ("error" in res) return;
 
-              const next = categories.filter((c) => c.id !== menuCategoryId);
-
-              onCategoriesUpdated?.(next);
+              onCategoriesUpdated?.(
+                res.categories.map((c) => ({ id: c.id, name: c.name })),
+              );
               onCategoryDeleted?.(menuCategoryId);
 
               if (activeCategoryId === menuCategoryId) {
@@ -327,7 +445,6 @@ export default function CategoryFolderPanel({
         />
       )}
 
-      {/* ================= MODAL TABLE ================= */}
       <Dialog
         open={Boolean(activeCategoryId)}
         onClose={() => setActiveCategoryId(null)}
@@ -356,10 +473,7 @@ export default function CategoryFolderPanel({
             <NotesDataTable
               initialData={notesInitialData}
               initialTotal={notesInitialTotal}
-              categories={categories.map((c) => ({
-                id: c.id,
-                name: c.name,
-              }))}
+              categories={categoryOptionsForNotes}
               initialPageSize={10}
               lockedCategoryId={activeCategoryId}
               hideTopActions
