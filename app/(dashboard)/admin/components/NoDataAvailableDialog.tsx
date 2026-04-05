@@ -38,17 +38,13 @@ export default function NoDataAvailableDialog({ open }: { open: boolean }) {
       <DialogContent sx={{ p: 4, pb: 3 }}>
         {/* Icon */}
         <Box
+          className="bg-admin-card flex items-center justify-center rounded-full"
           sx={{
             width: 56,
             height: 56,
-            borderRadius: "50%",
-            background: "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
             mx: "auto",
             mb: 2,
-            boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
+            boxShadow: 2,
           }}
         >
           <Typography

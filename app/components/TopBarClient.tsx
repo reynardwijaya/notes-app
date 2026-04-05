@@ -1,7 +1,7 @@
 "use client";
 
 import { logout } from "@/app/action/logout";
-import { Avatar, Button } from "@mui/material";
+import { Avatar, Box, Button, Stack } from "@mui/material";
 import { useTransition } from "react";
 
 interface TopBarProps {
@@ -14,57 +14,109 @@ export default function TopBarClient({ pageTitle, email, role }: TopBarProps) {
   const [isPending] = useTransition();
 
   return (
-    <header className="w-full bg-white/90 backdrop-blur-md border-b border-slate-100/50 px-6 py-3.5 flex justify-between items-center shadow-sm sticky top-0 z-40">
-      {/* LEFT */}
-      <div className="flex flex-col space-y-0.5">
-        <h1 className="text-lg font-semibold text-slate-900 leading-tight">
+    <Box
+      component="header"
+      sx={{
+        width: "100%",
+        bgcolor: "background.paper",
+        backdropFilter: "blur(12px)",
+        borderBottom: 1,
+        borderColor: "divider",
+        px: 3,
+        py: 1.75,
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        boxShadow: 1,
+        position: "sticky",
+        top: 0,
+        zIndex: 40,
+      }}
+    >
+      <Stack spacing={0.5}>
+        <Box
+          component="h1"
+          sx={{
+            typography: "h6",
+            fontWeight: 600,
+            color: "text.primary",
+            lineHeight: 1.25,
+            m: 0,
+          }}
+        >
           {pageTitle}
-        </h1>
-        <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+        </Box>
+        <Box
+          component="span"
+          sx={{
+            typography: "caption",
+            fontWeight: 600,
+            color: "text.secondary",
+            textTransform: "uppercase",
+            letterSpacing: "0.06em",
+          }}
+        >
           {role === "admin" ? "Admin" : "Notes"}
-        </span>
-      </div>
+        </Box>
+      </Stack>
 
-      {/* RIGHT */}
-      <div className="flex items-center gap-3">
-        {/* USER INFO */}
-        <div className="flex items-center gap-2.5 pr-1">
+      <Stack direction="row" spacing={1.5} alignItems="center">
+        <Stack direction="row" spacing={1.25} alignItems="center" sx={{ pr: 0.5 }}>
           <Avatar
             sx={{
               width: 36,
               height: 36,
               fontSize: "0.875rem",
-              bgcolor: role === "admin" ? "rgb(59 130 246)" : "rgb(14 165 233)",
+              bgcolor: role === "admin" ? "primary.main" : "info.main",
               fontWeight: 600,
-              boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
+              boxShadow: 1,
             }}
             alt={email?.split("@")[0] || ""}
           >
             {email?.charAt(0).toUpperCase() || ""}
           </Avatar>
-          <div className="flex flex-col min-w-0">
-            <span className="text-sm font-medium text-slate-900 truncate max-w-[120px]">
+          <Stack spacing={0} sx={{ minWidth: 0 }}>
+            <Box
+              component="span"
+              sx={{
+                typography: "body2",
+                fontWeight: 500,
+                color: "text.primary",
+                maxWidth: 120,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
               {email?.split("@")[0] || "Loading..."}
-            </span>
-            <span className="text-xs text-slate-400 font-medium">
+            </Box>
+            <Box
+              component="span"
+              sx={{
+                typography: "caption",
+                color: "text.disabled",
+                fontWeight: 500,
+              }}
+            >
               {role === "admin" ? "Admin" : "User"}
-            </span>
-          </div>
-        </div>
+            </Box>
+          </Stack>
+        </Stack>
 
-        {/* LOGOUT */}
-        <form
+        <Box
+          component="form"
           action={logout}
-          className="transition-all duration-200"
           onClick={(e) => e.stopPropagation()}
+          sx={{ transition: "all 0.2s ease" }}
         >
           <Button
             type="submit"
             variant="contained"
             size="small"
             disabled={isPending}
+            color="error"
             sx={{
-              minWidth: "auto",
+              minWidth: 68,
               width: 68,
               height: 32,
               px: 1.75,
@@ -73,28 +125,27 @@ export default function TopBarClient({ pageTitle, email, role }: TopBarProps) {
               fontWeight: 600,
               textTransform: "none",
               borderRadius: "10px",
-              bgcolor: "rgb(239 68 68)",
-              color: "white",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+              boxShadow: 1,
               "&:hover": {
-                bgcolor: "rgb(220 38 38)",
-                boxShadow: "0 4px 12px rgba(239,68,68,0.3)",
+                boxShadow: 3,
                 transform: "translateY(-1px)",
               },
               "&:active": {
                 transform: "translateY(0)",
-                boxShadow: "0 2px 4px rgba(0,0,0,0.15)",
+                boxShadow: 1,
               },
               "&:disabled": {
-                bgcolor: "rgb(248 250 252)",
-                color: "rgb(148 163 184)",
+                bgcolor: "action.disabledBackground",
+                color: "action.disabled",
                 boxShadow: "none",
               },
             }}
           >
             {isPending ? (
-              <svg
-                className="w-4 h-4 animate-spin"
+              <Box
+                component="svg"
+                className="animate-spin"
+                sx={{ width: 16, height: 16 }}
                 fill="none"
                 viewBox="0 0 24 24"
               >
@@ -111,13 +162,15 @@ export default function TopBarClient({ pageTitle, email, role }: TopBarProps) {
                   fill="currentColor"
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                 />
-              </svg>
+              </Box>
             ) : (
-              <span className="font-semibold tracking-tight">Logout</span>
+              <Box component="span" sx={{ fontWeight: 600, letterSpacing: "-0.02em" }}>
+                Logout
+              </Box>
             )}
           </Button>
-        </form>
-      </div>
-    </header>
+        </Box>
+      </Stack>
+    </Box>
   );
 }

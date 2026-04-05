@@ -1,31 +1,34 @@
-import ResetPasswordForm from "@/app/(auth)/components/ResetPasswordForm";
+"use client";
+
 import Link from "next/link";
+import { Box, Typography } from "@mui/material";
+import ResetPasswordForm from "@/app/(auth)/components/ResetPasswordForm";
+import AuthPageShell from "@/app/(auth)/components/AuthPageShell";
 
 export default function ResetPasswordPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-md">
-        <h1 className="text-2xl font-semibold text-gray-800 text-center">
-          Reset password
-        </h1>
-        <p className="text-sm text-gray-500 text-center mt-1">
-          Choose a new password for your account
-        </p>
-
-        <div className="mt-6">
-          <ResetPasswordForm />
-        </div>
-
-        <p className="text-center mt-6 text-sm text-gray-600">
+    <AuthPageShell
+      title="Reset password"
+      subtitle="Choose a new password for your account"
+      footer={
+        <Typography variant="body2" color="text.secondary" sx={{ textAlign: "center" }}>
           Back to{" "}
-          <Link
+          <Box
+            component={Link}
             href="/login"
-            className="text-blue-600 font-medium hover:underline"
+            sx={{
+              color: "primary.main",
+              fontWeight: 600,
+              textDecoration: "none",
+              "&:hover": { textDecoration: "underline" },
+            }}
           >
             Login
-          </Link>
-        </p>
-      </div>
-    </div>
+          </Box>
+        </Typography>
+      }
+    >
+      <ResetPasswordForm />
+    </AuthPageShell>
   );
 }

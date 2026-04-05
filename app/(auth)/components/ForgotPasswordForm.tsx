@@ -3,10 +3,9 @@
 import { useState } from "react";
 import { resetPassword } from "@/lib/auth";
 import { TextField, Button, Box } from "@mui/material";
-import { useToast } from "@/app/components/ToastProvider";
+import { toast } from "@/lib/toast";
 
 export default function ForgotPasswordForm() {
-  const toast = useToast();
   const [email, setEmail] = useState("");
 
   const handleReset = async (e: React.FormEvent) => {
@@ -31,7 +30,6 @@ export default function ForgotPasswordForm() {
           display: "flex",
           flexDirection: "column",
           gap: 3.5,
-          mt: 4,
           maxWidth: 400,
           mx: "auto",
           pb: 2,

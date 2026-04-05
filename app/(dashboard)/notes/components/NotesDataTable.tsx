@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ColumnDef,
@@ -8,7 +9,6 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import {
-  Alert,
   Box,
   Button,
   Chip,
@@ -18,7 +18,6 @@ import {
   IconButton,
   InputAdornment,
   Paper,
-  Snackbar,
   Table,
   TableBody,
   TableCell,
@@ -47,10 +46,9 @@ import CreateNoteForm from "@/app/(dashboard)/notes/components/CreateNoteForm";
 import CreateCategoryModal from "@/app/(dashboard)/categories/components/CreateCategoryModal";
 import ConfirmationModal from "@/app/components/ConfirmationModal";
 import NoteDetailModal from "@/app/(dashboard)/notes/components/NoteDetailModal";
-import {
-  buildCategoryColorIndex,
-  getPastelByIndex,
-} from "@/utils/categoryColors";
+import { toast } from "@/lib/toast";
+import { buildCategoryColorIndex } from "@/utils/categoryColorMap";
+import { getCategoryStyle } from "@/utils/categoryStyle";
 
 type Props = {
   initialData: NoteWithCategory[];
@@ -125,11 +123,7 @@ export default function NotesDataTable({
   );
   const [deletingNote, setDeletingNote] = useState(false);
 
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">(
-    "success",
-  );
+  const router = useRouter();
 
   const categoryColorIndex = useMemo(
     () => buildCategoryColorIndex(categoriesState),
@@ -186,11 +180,10 @@ export default function NotesDataTable({
     );
   }, [recentlyDeletedCategoryId]);
 
-  const showToast = useCallback(
+  const notify = useCallback(
     (message: string, severity: "success" | "error") => {
-      setSnackbarMessage(message);
-      setSnackbarSeverity(severity);
-      setSnackbarOpen(true);
+      if (severity === "success") toast.success(message);
+      else toast.error(message);
     },
     [],
   );
@@ -237,12 +230,12 @@ export default function NotesDataTable({
       } catch (err) {
         const message =
           err instanceof Error ? err.message : "Failed to fetch notes";
-        showToast(message, "error");
+        notify(message, "error");
       } finally {
         setLoading(false);
       }
     },
-    [notesScopeUserId, lockedCategoryId, showToast, sortColumn, sortDirection],
+    [notesScopeUserId, lockedCategoryId, notify, sortColumn, sortDirection],
   );
 
   useEffect(() => {
@@ -351,19 +344,24 @@ export default function NotesDataTable({
           const idx = categoryId
             ? categoryColorIndex.get(categoryId)
             : undefined;
-          const color = typeof idx === "number" ? getPastelByIndex(idx) : null;
+
+          const color = typeof idx === "number" ? getCategoryStyle(idx) : null;
 
           return (
             <Chip
               label={label}
               size="small"
+              variant="outlined"
+              className={
+                color
+                  ? `${color.bg} ${color.text} ${color.border} border border-solid`
+                  : "border-gray-200 bg-gray-100 text-gray-600 border border-solid"
+              }
               sx={{
                 borderRadius: 999,
                 height: 26,
-                bgcolor: color?.bg ?? "grey.100",
-                color: color?.text ?? "text.secondary",
-                border: "1px solid",
-                borderColor: color?.border ?? "divider",
+                borderWidth: 1,
+                bgcolor: "transparent",
                 "& .MuiChip-label": { px: 1.25, fontSize: 12, fontWeight: 700 },
               }}
             />
@@ -685,7 +683,7 @@ export default function NotesDataTable({
         </TableContainer>
 
         <TablePagination
-          component="div"
+          component={Box}
           count={total}
           page={pageIndex}
           onPageChange={(_, nextPage) => setPageIndex(nextPage)}
@@ -728,7 +726,8 @@ export default function NotesDataTable({
             onCancel={() => setNoteModalOpen(false)}
             onSaved={async (created) => {
               setNoteModalOpen(false);
-              showToast("Note created successfully", "success");
+              toast.success("Note created successfully");
+              router.refresh();
 
               if (pageIndex === 0 && search.trim() === "") {
                 setData((prev) => [created, ...prev].slice(0, pageSize));
@@ -783,7 +782,8 @@ export default function NotesDataTable({
               }}
               onSaved={async (updated) => {
                 setEditModalOpen(false);
-                showToast("Note updated successfully", "success");
+                toast.success("Note updated successfully");
+                router.refresh();
                 setData((prev) =>
                   prev.map((n) => (n.id === updated.id ? updated : n)),
                 );
@@ -807,6 +807,7 @@ export default function NotesDataTable({
       <NoteDetailModal
         open={Boolean(noteToView)}
         note={noteToView}
+        categories={categoriesState}
         onClose={() => setNoteToView(null)}
       />
 
@@ -822,6 +823,7 @@ export default function NotesDataTable({
 
             setCategoriesState(next);
             onCategoriesUpdated?.(next);
+            router.refresh();
             if (removedIds.length > 0) {
               setData((prev) =>
                 prev.map((note) =>
@@ -836,8 +838,8 @@ export default function NotesDataTable({
               );
             }
           }}
-          onSuccessMessage={(m) => showToast(m, "success")}
-          onErrorMessage={(m) => showToast(m, "error")}
+          onSuccessMessage={(m) => toast.success(m)}
+          onErrorMessage={(m) => toast.error(m)}
         />
       )}
 
@@ -856,11 +858,12 @@ export default function NotesDataTable({
             try {
               const res = await deleteNote({ id: noteToDelete.id });
               if ("error" in res) {
-                showToast(res.error, "error");
+                toast.error(res.error);
                 return;
               }
-              showToast("Note deleted", "success");
+              toast.success("Note deleted");
               setNoteToDelete(null);
+              router.refresh();
               await refetch({ pageIndex, pageSize, search, fromDate, toDate });
             } finally {
               setDeletingNote(false);
@@ -868,22 +871,6 @@ export default function NotesDataTable({
           }}
         />
       )}
-
-      <Snackbar
-        open={snackbarOpen}
-        onClose={() => setSnackbarOpen(false)}
-        autoHideDuration={3500}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-      >
-        <Alert
-          onClose={() => setSnackbarOpen(false)}
-          severity={snackbarSeverity}
-          variant="filled"
-          sx={{ borderRadius: 2 }}
-        >
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 }

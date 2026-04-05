@@ -9,14 +9,13 @@ export default function Home() {
 
   return (
     <Box
+      className="bg-landing-hero bg-cover"
       sx={{
         minHeight: "100vh",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        background:
-          "linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f1f5f9 100%)",
         position: "relative",
         overflow: "hidden",
         px: { xs: 2, sm: 3 },
@@ -53,7 +52,7 @@ export default function Home() {
             component="h1"
             fontWeight={700}
             sx={{
-              color: "rgb(17, 24, 39)",
+              color: "text.primary",
               mb: 1.5,
               fontSize: { xs: "2.25rem", sm: "3rem", md: "4rem" },
               lineHeight: 1.15,
@@ -69,7 +68,7 @@ export default function Home() {
           <Typography
             variant="h5"
             sx={{
-              color: "rgb(107, 114, 128)",
+              color: "text.secondary",
               mb: 6,
               fontWeight: 400,
               lineHeight: 1.5,
@@ -105,14 +104,12 @@ export default function Home() {
             >
               {/* Note Card */}
               <Paper
+                className="bg-landing-card-note border border-black/5"
                 sx={{
                   p: 2,
                   width: 72,
                   height: 72,
                   borderRadius: 2,
-                  border: "1px solid rgba(0,0,0,0.05)",
-                  background:
-                    "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
                   boxShadow: "0 4px 16px rgba(0,0,0,0.06)",
                   display: "flex",
                   alignItems: "center",
@@ -124,14 +121,12 @@ export default function Home() {
 
               {/* Folder Card */}
               <Paper
+                className="bg-landing-card-folder border border-black/5"
                 sx={{
                   p: 2,
                   width: 72,
                   height: 72,
                   borderRadius: 2,
-                  border: "1px solid rgba(0,0,0,0.05)",
-                  background:
-                    "linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)",
                   boxShadow: "0 4px 16px rgba(251,191,36,0.2)",
                   display: "flex",
                   alignItems: "center",
@@ -143,14 +138,12 @@ export default function Home() {
 
               {/* Search Card */}
               <Paper
+                className="bg-landing-card-search border border-black/5"
                 sx={{
                   p: 2,
                   width: 72,
                   height: 72,
                   borderRadius: 2,
-                  border: "1px solid rgba(0,0,0,0.05)",
-                  background:
-                    "linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)",
                   boxShadow: "0 4px 16px rgba(59,130,246,0.2)",
                   display: "flex",
                   alignItems: "center",
@@ -173,6 +166,7 @@ export default function Home() {
           <Fade in timeout={1400}>
             <Button
               variant="contained"
+              color="primary"
               size="large"
               onClick={() => router.push("/login")}
               sx={{
@@ -184,11 +178,9 @@ export default function Home() {
                 fontSize: "0.95rem",
                 height: 44,
                 minWidth: 140,
-                boxShadow: "0 4px 16px rgba(59,130,246,0.25)",
-                bgcolor: "rgb(59 130 246)",
+                boxShadow: 3,
                 "&:hover": {
-                  bgcolor: "rgb(37 99 235)",
-                  boxShadow: "0 8px 25px rgba(59,130,246,0.35)",
+                  boxShadow: 6,
                   transform: "translateY(-1px)",
                 },
                 transition: "all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
@@ -201,6 +193,7 @@ export default function Home() {
           <Fade in timeout={1600}>
             <Button
               variant="text"
+              color="inherit"
               size="large"
               onClick={() => router.push("/register")}
               sx={{
@@ -210,12 +203,12 @@ export default function Home() {
                 textTransform: "none",
                 fontWeight: 500,
                 fontSize: "0.95rem",
-                color: "rgb(71 85 105)",
+                color: "text.secondary",
                 height: 44,
                 minWidth: 140,
                 "&:hover": {
-                  backgroundColor: "rgba(0,0,0,0.04)",
-                  color: "rgb(59 130 246)",
+                  backgroundColor: "action.hover",
+                  color: "primary.main",
                 },
                 transition: "all 0.2s ease",
               }}
@@ -230,7 +223,7 @@ export default function Home() {
           <Typography
             variant="body2"
             sx={{
-              color: "rgb(148 163 184)",
+              color: "text.disabled",
               fontWeight: 500,
               fontSize: "0.875rem",
             }}

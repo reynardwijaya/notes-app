@@ -206,16 +206,11 @@ export default function UsersTable({ users }: { users: AdminUserListRow[] }) {
                       }}
                     >
                       <Box
+                        className="bg-admin-card flex items-center justify-center rounded-full"
                         sx={{
                           width: 56,
                           height: 56,
-                          borderRadius: "50%",
-                          background:
-                            "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+                          boxShadow: 2,
                         }}
                       >
                         <Typography

@@ -3,11 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { TextField, Button, Box, CircularProgress } from "@mui/material";
-import { useToast } from "@/app/components/ToastProvider";
+import { toast } from "@/lib/toast";
 
 export default function LoginForm() {
   const router = useRouter();
-  const toast = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -57,7 +56,6 @@ export default function LoginForm() {
           display: "flex",
           flexDirection: "column",
           gap: 3.5,
-          mt: 4,
           maxWidth: 400,
           mx: "auto",
           pb: 2,

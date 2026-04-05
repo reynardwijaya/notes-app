@@ -19,10 +19,8 @@ import { deleteCategory } from "@/app/(dashboard)/categories/utils/deleteCategor
 import { getCategoryUsage } from "@/app/(dashboard)/categories/utils/getCategoryUsage";
 import ConfirmationModal from "@/app/components/ConfirmationModal";
 import type { NoteCategory } from "@/app/(dashboard)/notes/utils/types";
-import {
-  buildCategoryColorIndex,
-  getPastelByIndex,
-} from "@/utils/categoryColors";
+import { buildCategoryColorIndex } from "@/utils/categoryColorMap";
+import { getCategoryStyle } from "@/utils/categoryStyle";
 
 type Props = {
   open: boolean;
@@ -137,11 +135,12 @@ export default function CreateCategoryModal({
                 {categories.map((cat) =>
                   (() => {
                     const idx = categoryColorIndex.get(cat.id) ?? 0;
-                    const color = getPastelByIndex(idx);
+                    const color = getCategoryStyle(idx);
                     return (
                       <Chip
                         key={cat.id}
                         label={cat.name}
+                        variant="outlined"
                         onDelete={async () => {
                           setDeleteId(cat.id);
                           setDeleteUsage(null);
@@ -157,21 +156,16 @@ export default function CreateCategoryModal({
                           }
                         }}
                         deleteIcon={<CloseIcon sx={{ fontSize: 16 }} />}
+                        className={`${color.bg} ${color.text} ${color.border} border border-solid`}
                         sx={{
                           borderRadius: 999,
                           height: 32,
-                          bgcolor: color.bg,
-                          color: color.text,
-                          border: "1px solid",
-                          borderColor: color.border,
+                          borderWidth: 1,
+                          bgcolor: "transparent",
                           "& .MuiChip-label": { px: 1.25, fontWeight: 700 },
                           "& .MuiChip-deleteIcon": {
-                            color: "rgba(55,65,81,0.72)",
-                            "&:hover": { color: "rgba(185,28,28,0.72)" },
-                          },
-                          "&:hover": {
-                            bgcolor: color.bg,
-                            borderColor: color.border,
+                            color: "text.secondary",
+                            "&:hover": { color: "error.main" },
                           },
                         }}
                       />

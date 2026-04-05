@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
 import {
   Box,
@@ -48,6 +49,7 @@ export default function NotesDashboardShell({
   hideCreateButtons = false,
   notesScopeUserId,
 }: Props) {
+  const router = useRouter();
   const [categoriesState, setCategoriesState] =
     useState<CategoryWithMeta[]>(categories);
   const [folderInvalidate, setFolderInvalidate] = useState(0);
@@ -65,8 +67,9 @@ export default function NotesDashboardShell({
         })),
       );
       bumpFolderInvalidate();
+      router.refresh();
     },
-    [bumpFolderInvalidate],
+    [bumpFolderInvalidate, router],
   );
   const [search, setSearch] = useState("");
   const [fromDate, setFromDate] = useState("");

@@ -1,4 +1,7 @@
+"use client";
+
 import { ReactNode } from "react";
+import { Box } from "@mui/material";
 import TopBar from "./TopBar";
 
 interface Props {
@@ -15,9 +18,19 @@ export default function AppLayout({
   role = "user",
 }: Props) {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <Box
+      component="div"
+      sx={{
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        bgcolor: "background.default",
+      }}
+    >
       <TopBar pageTitle={pageTitle} email={userEmail} role={role} />
-      <main className="p-6">{children}</main>
-    </div>
+      <Box component="main" sx={{ flex: 1, p: 3 }}>
+        {children}
+      </Box>
+    </Box>
   );
 }

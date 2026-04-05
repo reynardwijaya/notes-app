@@ -1,34 +1,34 @@
-import ForgotPasswordForm from "@/app/(auth)/components/ForgotPasswordForm";
+"use client";
+
 import Link from "next/link";
+import { Box, Typography } from "@mui/material";
+import ForgotPasswordForm from "@/app/(auth)/components/ForgotPasswordForm";
+import AuthPageShell from "@/app/(auth)/components/AuthPageShell";
 
 export default function ForgotPasswordPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-md">
-        {/* TITLE */}
-        <h1 className="text-2xl font-semibold text-gray-800 text-center">
-          Forgot Password?
-        </h1>
-        <p className="text-sm text-gray-500 text-center mt-1">
-          Enter your email and we’ll send you a reset link
-        </p>
-
-        {/* FORM */}
-        <div className="mt-6">
-          <ForgotPasswordForm />
-        </div>
-
-        {/* BACK TO LOGIN */}
-        <p className="text-center mt-6 text-sm text-gray-600">
+    <AuthPageShell
+      title="Forgot Password?"
+      subtitle="Enter your email and we'll send you a reset link"
+      footer={
+        <Typography variant="body2" color="text.secondary" sx={{ textAlign: "center" }}>
           Remember your password?{" "}
-          <Link
+          <Box
+            component={Link}
             href="/login"
-            className="text-blue-600 font-medium hover:underline"
+            sx={{
+              color: "primary.main",
+              fontWeight: 600,
+              textDecoration: "none",
+              "&:hover": { textDecoration: "underline" },
+            }}
           >
             Back to Login
-          </Link>
-        </p>
-      </div>
-    </div>
+          </Box>
+        </Typography>
+      }
+    >
+      <ForgotPasswordForm />
+    </AuthPageShell>
   );
 }

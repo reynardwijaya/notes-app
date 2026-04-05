@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Box, Button, CircularProgress, TextField } from "@mui/material";
 import { supabase } from "@/lib/supabase";
-import { useToast } from "@/app/components/ToastProvider";
+import { toast } from "@/lib/toast";
 
 type RecoveryStatus = "checking" | "ready" | "missing" | "error";
 
@@ -14,7 +14,6 @@ function parseHashParams(hash: string): URLSearchParams {
 }
 
 export default function ResetPasswordForm() {
-  const toast = useToast();
   const router = useRouter();
 
   const [password, setPassword] = useState("");
@@ -81,7 +80,7 @@ export default function ResetPasswordForm() {
     return () => {
       cancelled = true;
     };
-  }, [toast]);
+  }, []);
 
   return (
     <Box
@@ -95,7 +94,7 @@ export default function ResetPasswordForm() {
           const { error } = await supabase.auth.updateUser({ password });
           if (error) throw error;
           toast.success("Password updated successfully", 3000);
-          router.push("/auth/login");
+          router.push("/login");
         } catch (err) {
           const message =
             err instanceof Error ? err.message : "Failed to update password";

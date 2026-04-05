@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { TablePagination } from "@mui/material";
 import {
@@ -23,10 +24,8 @@ import { getCategoriesPaginated } from "@/app/(dashboard)/categories/utils/getCa
 
 import type { NoteCategory } from "@/app/(dashboard)/notes/utils/types";
 import NotesDataTable from "@/app/(dashboard)/notes/components/NotesDataTable";
-import {
-  buildCategoryColorIndex,
-  getPastelByIndex,
-} from "@/utils/categoryColors";
+import { buildCategoryColorIndex } from "@/utils/categoryColorMap";
+import { getCategoryStyle } from "@/utils/categoryStyle";
 import ConfirmationModal from "@/app/components/ConfirmationModal";
 import { deleteCategory } from "@/app/(dashboard)/categories/utils/deleteCategory";
 
@@ -80,6 +79,7 @@ export default function CategoryFolderPanel({
   readOnly = false,
   notesScopeUserId,
 }: Props) {
+  const router = useRouter();
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
   const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null);
   const [menuCategoryId, setMenuCategoryId] = useState<string | null>(null);
@@ -159,8 +159,8 @@ export default function CategoryFolderPanel({
   ]);
 
   const categoryColorIndex = useMemo(
-    () => buildCategoryColorIndex(data),
-    [data],
+    () => buildCategoryColorIndex(categoryOptionsForNotes),
+    [categoryOptionsForNotes],
   );
 
   const activeCategory = data.find((c) => c.id === activeCategoryId) ?? null;
@@ -247,20 +247,18 @@ export default function CategoryFolderPanel({
           >
             {data.map((cat) => {
               const idx = categoryColorIndex.get(cat.id) ?? 0;
-              const color = getPastelByIndex(idx);
+              const color = getCategoryStyle(idx);
 
               return (
                 <Box
                   key={cat.id}
                   onClick={() => setActiveCategoryId(cat.id)}
+                  className={`${color.bg} ${color.border}`}
                   sx={{
                     gridColumn: { xs: "span 12", sm: "span 6", lg: "span 4" },
                     cursor: "pointer",
                     borderRadius: 3,
                     p: 1.75,
-                    bgcolor: color.bg,
-                    border: "1px solid",
-                    borderColor: color.border,
                     boxShadow: "0 6px 16px rgba(15,23,42,0.06)",
                     transition: "all 120ms ease",
                     minHeight: 110,
@@ -278,8 +276,7 @@ export default function CategoryFolderPanel({
                       justifyContent: "space-between",
                     }}
                   >
-                    <FolderOutlinedIcon sx={{ color: color.text }} />
-
+                    <FolderOutlinedIcon className={color.text} />
                     {!readOnly && (
                       <IconButton
                         size="small"
@@ -302,10 +299,10 @@ export default function CategoryFolderPanel({
 
                   <Typography
                     variant="subtitle2"
+                    className={color.text}
                     sx={{
                       mt: 1,
                       fontWeight: 600,
-                      color: color.text,
                     }}
                   >
                     {cat.name}
@@ -347,7 +344,7 @@ export default function CategoryFolderPanel({
         {total > 0 && (
           <Box sx={{ mt: 2 }}>
             <TablePagination
-              component="div"
+              component={Box}
               count={total}
               page={pageIndex}
               onPageChange={(_, nextPage) => {
@@ -432,6 +429,7 @@ export default function CategoryFolderPanel({
                 res.categories.map((c) => ({ id: c.id, name: c.name })),
               );
               onCategoryDeleted?.(menuCategoryId);
+              router.refresh();
 
               if (activeCategoryId === menuCategoryId) {
                 setActiveCategoryId(null);

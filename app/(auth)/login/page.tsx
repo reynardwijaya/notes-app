@@ -1,48 +1,58 @@
-import LoginForm from "@/app/(auth)/components/LoginForm";
+"use client";
+
 import Link from "next/link";
+import { Box, Typography } from "@mui/material";
+import LoginForm from "@/app/(auth)/components/LoginForm";
+import AuthPageShell from "@/app/(auth)/components/AuthPageShell";
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-md">
-        {/* TITLE */}
-        <h1 className="text-2xl font-semibold text-gray-800 text-center">
-          Welcome back
-        </h1>
-        <p className="text-sm text-gray-500 text-center mt-1">
-          Login to your account
-        </p>
-
-        {/* FORM */}
-        <div className="mt-6">
-          <LoginForm />
-        </div>
-
-        {/* LINKS */}
-        <div className="mt-6 text-sm text-gray-600 text-center space-y-2">
-          {/* REGISTER */}
-          <p>
-            Don’t have an account?{" "}
-            <Link
+    <AuthPageShell
+      title="Welcome back"
+      subtitle="Login to your account"
+      footer={
+        <Box
+          sx={{
+            textAlign: "center",
+            display: "flex",
+            flexDirection: "column",
+            gap: 1,
+          }}
+        >
+          <Typography variant="body2" color="text.secondary">
+            Don&apos;t have an account?{" "}
+            <Box
+              component={Link}
               href="/register"
-              className="text-blue-600 font-medium hover:underline"
+              sx={{
+                color: "primary.main",
+                fontWeight: 600,
+                textDecoration: "none",
+                "&:hover": { textDecoration: "underline" },
+              }}
             >
               Register
-            </Link>
-          </p>
-
-          {/* FORGOT PASSWORD */}
-          <p>
+            </Box>
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
             Forgot your password?{" "}
-            <Link
+            <Box
+              component={Link}
               href="/forgot-password"
-              className="text-blue-600 font-medium hover:underline"
+              sx={{
+                color: "primary.main",
+                fontWeight: 600,
+                textDecoration: "none",
+                "&:hover": { textDecoration: "underline" },
+              }}
             >
               Reset here
-            </Link>
-          </p>
-        </div>
-      </div>
-    </div>
+            </Box>
+          </Typography>
+        </Box>
+      }
+    >
+      <LoginForm />
+    </AuthPageShell>
   );
 }

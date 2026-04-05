@@ -3,11 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { TextField, Button, Box } from "@mui/material";
-import { useToast } from "@/app/components/ToastProvider";
+import { toast } from "@/lib/toast";
 
 export default function RegisterForm() {
   const router = useRouter();
-  const toast = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -28,7 +27,7 @@ export default function RegisterForm() {
     }
 
     toast.success("Register success! You can now login.");
-    router.push("/auth/login");
+    router.push("/login");
   };
 
   return (
@@ -39,7 +38,6 @@ export default function RegisterForm() {
         display: "flex",
         flexDirection: "column",
         gap: 3.5,
-        mt: 4,
         maxWidth: 400,
         mx: "auto",
         pb: 2,

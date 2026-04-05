@@ -31,7 +31,7 @@ export async function proxy(req: NextRequest) {
 
   // Belum login
   if (!session && (pathname.startsWith("/notes") || pathname.startsWith("/admin"))) {
-    return NextResponse.redirect(new URL("/auth/login", req.url));
+    return NextResponse.redirect(new URL("/login", req.url));
   }
 
   // Sudah login → jangan ke auth

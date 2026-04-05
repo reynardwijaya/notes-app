@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import {
   Box,
   Chip,
@@ -10,11 +11,17 @@ import {
   Typography,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import type { NoteWithCategory } from "@/app/(dashboard)/notes/utils/types";
+import type {
+  NoteCategory,
+  NoteWithCategory,
+} from "@/app/(dashboard)/notes/utils/types";
+import { buildCategoryColorIndex } from "@/utils/categoryColorMap";
+import { getCategoryStyle } from "@/utils/categoryStyle";
 
 type Props = {
   open: boolean;
   note: NoteWithCategory | null;
+  categories: NoteCategory[];
   onClose: () => void;
 };
 
@@ -27,7 +34,27 @@ function formatCreatedAt(value: string) {
   }).format(new Date(value));
 }
 
-export default function NoteDetailModal({ open, note, onClose }: Props) {
+export default function NoteDetailModal({
+  open,
+  note,
+  categories,
+  onClose,
+}: Props) {
+  const categoryColorIndex = useMemo(
+    () => buildCategoryColorIndex(categories),
+    [categories],
+  );
+
+  const categoryChip = useMemo(() => {
+    const label = note?.category_name || "Uncategorized";
+    const categoryId = note?.category_id;
+    const idx = categoryId
+      ? categoryColorIndex.get(categoryId)
+      : undefined;
+    const color = typeof idx === "number" ? getCategoryStyle(idx) : null;
+    return { label, color };
+  }, [note, categoryColorIndex]);
+
   return (
     <Dialog
       open={open}
@@ -55,11 +82,18 @@ export default function NoteDetailModal({ open, note, onClose }: Props) {
       <DialogContent sx={{ pt: 2.25 }}>
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}>
           <Chip
-            label={note?.category_name || "Uncategorized"}
+            label={categoryChip.label}
             size="small"
+            variant="outlined"
+            className={
+              categoryChip.color
+                ? `${categoryChip.color.bg} ${categoryChip.color.text} ${categoryChip.color.border} border border-solid`
+                : "border-gray-200 bg-gray-100 text-gray-600 border border-solid"
+            }
             sx={{
               borderRadius: 1.5,
-              bgcolor: "grey.100",
+              borderWidth: 1,
+              bgcolor: "transparent",
               "& .MuiChip-label": { px: 1, fontSize: 12 },
             }}
           />
