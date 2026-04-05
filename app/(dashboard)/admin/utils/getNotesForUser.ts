@@ -12,6 +12,8 @@ export async function getNotesForUser(input: {
   fromDate?: string | null;
   toDate?: string | null;
   categoryId?: string | null;
+  sortColumn?: "created_at" | "title";
+  sortDirection?: "asc" | "desc";
 }): Promise<{ data: NoteWithCategory[]; total: number }> {
   const admin = await requireAdmin();
   if (!admin.ok) return { data: [], total: 0 };
@@ -21,48 +23,59 @@ export async function getNotesForUser(input: {
   const safeUserId = (input.userId ?? "").trim();
   if (!safeUserId) return { data: [], total: 0 };
 
-  const page = Number.isFinite(input.page) && input.page >= 0 ? input.page : 0;
-  const pageSize =
-    Number.isFinite(input.pageSize) && input.pageSize > 0
+  const safePage =
+    Number.isFinite(input.page) && input.page >= 0 ? input.page : 0;
+
+  const safePageSize =
+    Number.isFinite(input.pageSize) &&
+    input.pageSize > 0 &&
+    input.pageSize <= 100
       ? input.pageSize
       : 10;
 
-  const offset = page * pageSize;
+  const safeSearch = (input.search ?? "").trim();
+  const safeFromDate = (input.fromDate ?? "").trim();
+  const safeToDate = (input.toDate ?? "").trim();
+  const safeCategoryId = (input.categoryId ?? "").trim();
+
+  const offset = safePage * safePageSize;
 
   const { data, error } = await supabase.rpc(
-    "admin_get_notes_for_user",
+    "admin_get_notes_for_user_sorted",
     {
       p_user_id: safeUserId,
-      p_search: input.search || null,
-      p_category_id: input.categoryId || null,
-      p_from_date: input.fromDate || null,
-      p_to_date: input.toDate || null,
-      p_limit: pageSize,
+      p_search: safeSearch || null,
+      p_category_id: safeCategoryId || null,
+      p_from_date: safeFromDate
+        ? new Date(`${safeFromDate}T00:00:00.000Z`).toISOString()
+        : null,
+      p_to_date: safeToDate
+        ? new Date(`${safeToDate}T23:59:59.999Z`).toISOString()
+        : null,
+      p_limit: safePageSize,
       p_offset: offset,
-    }
+      p_sort_column: input.sortColumn ?? "created_at",
+      p_sort_dir: input.sortDirection ?? "desc",
+    },
   );
 
-  if (error) throw new Error(error.message);
+  if (error) {
+    throw new Error(error.message);
+  }
 
-  const rows = (data ?? []) as {
-    id: string;
-    title: string | null;
-    content: string | null;
-    category_id: string | null;
-    category_name: string | null;
-    created_at: string;
-    total_count: number;
-  }[];
+  const list = Array.isArray(data) ? data : [];
 
-  const total = rows.length > 0 ? Number(rows[0].total_count) : 0;
+  const rows: NoteWithCategory[] = list.map((row) =>
+    mapNoteRow({
+      ...row,
+      note_categories: { name: row.category_name },
+    }),
+  );
+
+  const total = list.length > 0 ? Number(list[0].total_count) : 0;
 
   return {
-    data: rows.map((r) =>
-      mapNoteRow({
-        ...r,
-        note_categories: { name: r.category_name },
-      })
-    ),
+    data: rows,
     total,
   };
 }

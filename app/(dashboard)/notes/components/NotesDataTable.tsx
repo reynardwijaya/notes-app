@@ -107,6 +107,10 @@ export default function NotesDataTable({
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(initialPageSize);
   const [search, setSearch] = useState(searchProp ?? "");
+  const [sortColumn, setSortColumn] = useState<"created_at" | "title">(
+    "created_at",
+  );
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [fromDate, setFromDate] = useState<string>(fromDateProp ?? "");
   const [toDate, setToDate] = useState<string>(toDateProp ?? "");
 
@@ -211,6 +215,8 @@ export default function NotesDataTable({
               fromDate: next.fromDate,
               toDate: next.toDate,
               categoryId: lockedCategoryId ?? null,
+              sortColumn,
+              sortDirection,
             })
           : await getNotes({
               page: next.pageIndex,
@@ -219,6 +225,8 @@ export default function NotesDataTable({
               fromDate: next.fromDate,
               toDate: next.toDate,
               categoryId: lockedCategoryId ?? null,
+              sortColumn,
+              sortDirection,
             });
         setData(res.data);
         setTotal(res.total);
@@ -234,7 +242,7 @@ export default function NotesDataTable({
         setLoading(false);
       }
     },
-    [notesScopeUserId, lockedCategoryId, showToast],
+    [notesScopeUserId, lockedCategoryId, showToast, sortColumn, sortDirection],
   );
 
   useEffect(() => {
@@ -242,13 +250,83 @@ export default function NotesDataTable({
       void refetch({ pageIndex, pageSize, search, fromDate, toDate });
     }, 250);
     return () => clearTimeout(t);
-  }, [pageIndex, pageSize, search, fromDate, toDate, refetch]);
+  }, [
+    pageIndex,
+    pageSize,
+    search,
+    fromDate,
+    toDate,
+    sortColumn,
+    sortDirection,
+    refetch,
+  ]);
+
+  const renderSortIcon = useCallback(
+    (column: "title" | "created_at") => {
+      const isActive = sortColumn === column;
+
+      return (
+        <Box
+          sx={{
+            width: 20,
+            height: 20,
+            borderRadius: 2,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 14,
+            fontWeight: 600,
+            bgcolor: isActive ? "primary.50" : "grey.100",
+            color: isActive ? "primary.main" : "text.secondary",
+            border: "1px solid",
+            borderColor: isActive ? "primary.main" : "divider",
+            transition: "all 0.2s ease",
+            boxShadow: isActive ? "0 2px 8px rgba(59,130,246,0.15)" : "none",
+          }}
+        >
+          {isActive ? (sortDirection === "asc" ? "▲" : "▼") : "↕"}
+        </Box>
+      );
+    },
+    [sortColumn, sortDirection],
+  );
 
   const columns = useMemo<ColumnDef<NoteWithCategory>[]>(() => {
     const base: ColumnDef<NoteWithCategory>[] = [
       {
         accessorKey: "title",
-        header: "Title",
+        header: () => (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 0.75,
+              cursor: "pointer",
+              p: 0.5,
+              borderRadius: 1,
+              transition: "all 0.15s ease",
+              "&:hover": {
+                bgcolor: "action.hover !important",
+              },
+            }}
+            onClick={() => {
+              setSortColumn("title");
+              setSortDirection((prev) =>
+                sortColumn === "title"
+                  ? prev === "asc"
+                    ? "desc"
+                    : "asc"
+                  : "asc",
+              );
+              setPageIndex(0);
+            }}
+          >
+            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+              Title
+            </Typography>
+            {renderSortIcon("title")}
+          </Box>
+        ),
         cell: (info) => (
           <Typography
             variant="subtitle2"
@@ -294,7 +372,38 @@ export default function NotesDataTable({
       },
       {
         accessorKey: "created_at",
-        header: "Created At",
+        header: () => (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 0.75,
+              cursor: "pointer",
+              p: 0.5,
+              borderRadius: 1,
+              transition: "all 0.15s ease",
+              "&:hover": {
+                bgcolor: "action.hover !important",
+              },
+            }}
+            onClick={() => {
+              setSortColumn("created_at");
+              setSortDirection((prev) =>
+                sortColumn === "created_at"
+                  ? prev === "desc"
+                    ? "asc"
+                    : "desc"
+                  : "desc",
+              );
+              setPageIndex(0);
+            }}
+          >
+            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+              Created At
+            </Typography>
+            {renderSortIcon("created_at")}
+          </Box>
+        ),
         cell: (info) => (
           <Typography variant="caption" sx={{ color: "text.secondary" }}>
             {formatCreatedAt(String(info.getValue() ?? ""))}
@@ -339,7 +448,7 @@ export default function NotesDataTable({
         ),
       },
     ];
-  }, [categoryColorIndex, readOnly]);
+  }, [categoryColorIndex, readOnly, renderSortIcon, sortColumn, sortDirection]);
 
   const table = useReactTable({
     data,
@@ -494,14 +603,14 @@ export default function NotesDataTable({
             <TableHead>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header, index) => (
+                  {headerGroup.headers.map((header) => (
                     <TableCell
                       key={header.id}
                       sx={{
                         fontWeight: 700,
                         py: 1.1,
                         px: 1.5,
-                        ...(index === headerGroup.headers.length - 1
+                        ...(header.column.id === "actions"
                           ? { textAlign: "right", pr: 2 }
                           : {}),
                       }}
@@ -551,13 +660,13 @@ export default function NotesDataTable({
                     }}
                     sx={{ cursor: "pointer" }}
                   >
-                    {row.getVisibleCells().map((cell, index) => (
+                    {row.getVisibleCells().map((cell) => (
                       <TableCell
                         key={cell.id}
                         sx={{
                           py: 1,
                           px: 1.5,
-                          ...(index === row.getVisibleCells().length - 1
+                          ...(cell.column.id === "actions"
                             ? { textAlign: "right", pr: 2 }
                             : {}),
                         }}

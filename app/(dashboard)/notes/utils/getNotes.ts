@@ -11,6 +11,8 @@ export async function getNotes({
   fromDate,
   toDate,
   categoryId,
+  sortColumn,
+  sortDirection,
 }: {
   page: number;
   pageSize: number;
@@ -18,6 +20,8 @@ export async function getNotes({
   fromDate?: string | null;
   toDate?: string | null;
   categoryId?: string | null;
+  sortColumn?: string;
+  sortDirection?: string;
 }): Promise<{ data: NoteWithCategory[]; total: number }> {
   const supabase = await createClient();
 
@@ -37,7 +41,7 @@ export async function getNotes({
   const safeToDate = (toDate ?? "").trim();
   const safeCategoryId = (categoryId ?? "").trim();
 
-  const { data, error } = await supabase.rpc("get_notes", {
+  const { data, error } = await supabase.rpc("get_notes_sorted", {
     p_page: safePage,
     p_page_size: safePageSize,
     p_search: safeSearch || "",
@@ -48,6 +52,8 @@ export async function getNotes({
     p_to_date: safeToDate
       ? new Date(`${safeToDate}T23:59:59.999Z`).toISOString()
       : null,
+    p_sort_column: sortColumn ?? "created_at",
+    p_sort_dir: sortDirection ?? "desc",
   });
 
   if (error) {
