@@ -47,8 +47,8 @@ import CreateCategoryModal from "@/app/(dashboard)/categories/components/CreateC
 import ConfirmationModal from "@/app/components/ConfirmationModal";
 import NoteDetailModal from "@/app/(dashboard)/notes/components/NoteDetailModal";
 import { toast } from "@/lib/toast";
-import { buildCategoryColorIndex } from "@/utils/categoryColorMap";
-import { getCategoryStyle } from "@/utils/categoryStyle";
+import { buildCategoryColorIndex } from "@/lib/categoryColorMap";
+import { getCategoryStyle } from "@/lib/categoryStyle";
 
 type Props = {
   initialData: NoteWithCategory[];
@@ -508,9 +508,12 @@ export default function NotesDataTable({
               sx={{
                 minWidth: 170,
                 flex: "0 1 170px",
-                "& .MuiOutlinedInput-root": { borderRadius: 2.5 },
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 2.5,
+                },
               }}
             />
+
             <TextField
               label="To"
               type="date"
@@ -524,7 +527,9 @@ export default function NotesDataTable({
               sx={{
                 minWidth: 170,
                 flex: "0 1 170px",
-                "& .MuiOutlinedInput-root": { borderRadius: 2.5 },
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 2.5,
+                },
               }}
             />
 

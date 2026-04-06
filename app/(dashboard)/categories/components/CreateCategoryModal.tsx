@@ -19,8 +19,8 @@ import { deleteCategory } from "@/app/(dashboard)/categories/utils/deleteCategor
 import { getCategoryUsage } from "@/app/(dashboard)/categories/utils/getCategoryUsage";
 import ConfirmationModal from "@/app/components/ConfirmationModal";
 import type { NoteCategory } from "@/app/(dashboard)/notes/utils/types";
-import { buildCategoryColorIndex } from "@/utils/categoryColorMap";
-import { getCategoryStyle } from "@/utils/categoryStyle";
+import { buildCategoryColorIndex } from "@/lib/categoryColorMap";
+import { getCategoryStyle } from "@/lib/categoryStyle";
 
 type Props = {
   open: boolean;

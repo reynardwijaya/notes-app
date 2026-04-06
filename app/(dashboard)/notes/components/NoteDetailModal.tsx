@@ -15,8 +15,8 @@ import type {
   NoteCategory,
   NoteWithCategory,
 } from "@/app/(dashboard)/notes/utils/types";
-import { buildCategoryColorIndex } from "@/utils/categoryColorMap";
-import { getCategoryStyle } from "@/utils/categoryStyle";
+import { buildCategoryColorIndex } from "@/lib/categoryColorMap";
+import { getCategoryStyle } from "@/lib/categoryStyle";
 
 type Props = {
   open: boolean;
@@ -48,9 +48,7 @@ export default function NoteDetailModal({
   const categoryChip = useMemo(() => {
     const label = note?.category_name || "Uncategorized";
     const categoryId = note?.category_id;
-    const idx = categoryId
-      ? categoryColorIndex.get(categoryId)
-      : undefined;
+    const idx = categoryId ? categoryColorIndex.get(categoryId) : undefined;
     const color = typeof idx === "number" ? getCategoryStyle(idx) : null;
     return { label, color };
   }, [note, categoryColorIndex]);

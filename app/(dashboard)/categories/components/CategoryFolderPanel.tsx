@@ -24,8 +24,8 @@ import { getCategoriesPaginated } from "@/app/(dashboard)/categories/utils/getCa
 
 import type { NoteCategory } from "@/app/(dashboard)/notes/utils/types";
 import NotesDataTable from "@/app/(dashboard)/notes/components/NotesDataTable";
-import { buildCategoryColorIndex } from "@/utils/categoryColorMap";
-import { getCategoryStyle } from "@/utils/categoryStyle";
+import { buildCategoryColorIndex } from "@/lib/categoryColorMap";
+import { getCategoryStyle } from "@/lib/categoryStyle";
 import ConfirmationModal from "@/app/components/ConfirmationModal";
 import { deleteCategory } from "@/app/(dashboard)/categories/utils/deleteCategory";
 

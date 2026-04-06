@@ -20,7 +20,7 @@ export default async function AdminUserDetailPage({
     data: { user: adminUser },
   } = await supabase.auth.getUser();
 
-  // Step 1: fetch the user by id first so "User not found" is only shown for truly non-existing users.
+  // fetch the user by id first so "User not found" is only shown for truly non-existing users.
   const userRes = await getUserOverview({ id });
 
   if ("error" in userRes) {
@@ -33,7 +33,7 @@ export default async function AdminUserDetailPage({
 
   const viewedUser = userRes.user;
 
-  // Step 2: fetch notes and categories only after we know the user exists.
+  // fetch notes and categories only after we know the user exists.
   const FOLDER_PAGE_SIZE = 6;
 
   const [categories, initialNotes] = await Promise.all([
@@ -48,7 +48,7 @@ export default async function AdminUserDetailPage({
     total_notes: Number(c.total_notes ?? 0),
   }));
 
-  // Step 3: empty data state is handled separately from "User not found".
+  // empty data state is handled separately from "User not found".
   const showNoData = initialNotes.data.length === 0 && categories.length === 0;
 
   return (

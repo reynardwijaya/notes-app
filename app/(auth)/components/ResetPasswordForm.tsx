@@ -93,6 +93,7 @@ export default function ResetPasswordForm() {
         try {
           const { error } = await supabase.auth.updateUser({ password });
           if (error) throw error;
+
           toast.success("Password updated successfully", 3000);
           router.push("/login");
         } catch (err) {
@@ -103,8 +104,13 @@ export default function ResetPasswordForm() {
           setSaving(false);
         }
       }}
-      sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 3,
+      }}
     >
+      {/* NEW PASSWORD */}
       <TextField
         label="New password"
         type="password"
@@ -114,8 +120,15 @@ export default function ResetPasswordForm() {
         onChange={(e) => setPassword(e.target.value)}
         disabled={status !== "ready" || saving}
         helperText="Minimum 8 characters"
+        size="medium"
+        sx={{
+          "& .MuiOutlinedInput-root": {
+            borderRadius: 2,
+          },
+        }}
       />
 
+      {/* CONFIRM PASSWORD */}
       <TextField
         label="Confirm new password"
         type="password"
@@ -125,22 +138,38 @@ export default function ResetPasswordForm() {
         onChange={(e) => setConfirm(e.target.value)}
         disabled={status !== "ready" || saving}
         error={confirm.length > 0 && password !== confirm}
+        size="medium"
+        sx={{
+          "& .MuiOutlinedInput-root": {
+            borderRadius: 2,
+          },
+        }}
       />
 
+      {/* BUTTON */}
       <Button
         type="submit"
         variant="contained"
         disabled={!canSubmit}
-        sx={{ mt: 1 }}
+        fullWidth
+        sx={{
+          py: 1.5,
+          borderRadius: 2,
+          textTransform: "none",
+          fontWeight: 600,
+          fontSize: "1rem",
+        }}
       >
         {saving ? <CircularProgress size={20} /> : "Update Password"}
       </Button>
 
+      {/* STATUS */}
       {status === "checking" && (
         <Box sx={{ color: "text.secondary", fontSize: 13 }}>
           Validating reset link…
         </Box>
       )}
+
       {status === "missing" && (
         <Box sx={{ color: "error.main", fontSize: 13 }}>
           Reset link is missing or expired. Please request a new one.

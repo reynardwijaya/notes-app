@@ -1,13 +1,7 @@
 "use client";
 
 import { Users, FileText, UserCheck } from "lucide-react";
-import {
-  Box,
-  Paper,
-  Stack,
-  Typography,
-  useTheme,
-} from "@mui/material";
+import { Box, Paper, Stack, Typography, useTheme } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import UsersTable from "@/app/(dashboard)/admin/components/UsersTable";
 import { AdminDashboardData } from "../utils/types";
@@ -22,7 +16,12 @@ export default function DashboardContent({ data }: DashboardContentProps) {
   const { totals, mostActiveUser, users } = data;
 
   return (
-    <Stack spacing={2}>
+    <Stack
+      direction="column"
+      spacing={1}
+      alignItems="center"
+      justifyContent="center"
+    >
       <Stack
         direction={{ xs: "column", lg: "row" }}
         spacing={2}
@@ -203,7 +202,10 @@ export default function DashboardContent({ data }: DashboardContentProps) {
       </Stack>
 
       <Stack spacing={1} sx={{ maxWidth: 980, mx: "auto", width: "100%" }}>
-        <Typography variant="subtitle1" sx={{ fontWeight: 600, color: "text.primary" }}>
+        <Typography
+          variant="subtitle1"
+          sx={{ fontWeight: 600, color: "text.primary" }}
+        >
           User&apos;s Detail
         </Typography>
         <UsersTable

@@ -10,7 +10,7 @@ import {
   TextField,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import CloseIcon from "@mui/icons-material/Close";
 import CategoryOutlinedIcon from "@mui/icons-material/CategoryOutlined";
 import type {
   NoteCategory,
@@ -149,10 +149,15 @@ export default function NotesDashboardShell({
             InputLabelProps={{ shrink: true }}
             sx={{
               minWidth: 170,
-              "& .MuiOutlinedInput-root": { borderRadius: 2.5 },
-              "& .MuiInputBase-root": { height: 40 },
+              "& .MuiOutlinedInput-root": {
+                borderRadius: 2.5,
+              },
+              "& .MuiInputBase-input": {
+                py: 1.1,
+              },
             }}
           />
+
           <TextField
             label="To"
             type="date"
@@ -162,8 +167,12 @@ export default function NotesDashboardShell({
             InputLabelProps={{ shrink: true }}
             sx={{
               minWidth: 170,
-              "& .MuiOutlinedInput-root": { borderRadius: 2.5 },
-              "& .MuiInputBase-root": { height: 40 },
+              "& .MuiOutlinedInput-root": {
+                borderRadius: 2.5,
+              },
+              "& .MuiInputBase-input": {
+                py: 1.1,
+              },
             }}
           />
           <IconButton
@@ -181,7 +190,7 @@ export default function NotesDashboardShell({
               height: 40,
             }}
           >
-            <RestartAltIcon fontSize="small" />
+            <CloseIcon fontSize="small" />
           </IconButton>
         </Box>
 
@@ -254,9 +263,7 @@ export default function NotesDashboardShell({
             }))}
             folderInitial={categoryFolderInitial}
             folderInvalidate={folderInvalidate}
-            scopedFolderCategories={
-              notesScopeUserId ? categoryRows : undefined
-            }
+            scopedFolderCategories={notesScopeUserId ? categoryRows : undefined}
             notesInitialData={[]}
             notesInitialTotal={0}
             onCategoriesUpdated={handleCategoriesUpdated}

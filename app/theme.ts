@@ -1,5 +1,6 @@
 import { createTheme } from "@mui/material/styles";
 
+// global design system untuk MUI
 export const appTheme = createTheme({
   palette: {
     mode: "light",
@@ -9,6 +10,6 @@ export const appTheme = createTheme({
     },
   },
   shape: {
-    borderRadius: 8,
+    borderRadius: 6,
   },
 });
