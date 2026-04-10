@@ -8,6 +8,7 @@ import NoDataAvailableDialog from "@/app/(dashboard)/admin/components/NoDataAvai
 import AdminUserDetailHeader from "@/app/(dashboard)/admin/components/AdminUserDetailHeader";
 import { Box, Stack, Typography } from "@mui/material";
 
+// Ambil params dari URL -> /admin/users/[id]
 export default async function AdminUserDetailPage({
   params,
 }: {
@@ -15,12 +16,13 @@ export default async function AdminUserDetailPage({
 }) {
   const { id } = await params;
 
+  // Ambil current logged-in user (validasi role dan tracking akses)
   const supabase = await createClient();
   const {
     data: { user: adminUser },
   } = await supabase.auth.getUser();
 
-  // fetch the user by id first so "User not found" is only shown for truly non-existing users.
+  //Ambil data user yang ingin dilihat
   const userRes = await getUserOverview({ id });
 
   if ("error" in userRes) {
@@ -31,16 +33,19 @@ export default async function AdminUserDetailPage({
     );
   }
 
+  // Simpan user yang valid
   const viewedUser = userRes.user;
 
-  // fetch notes and categories only after we know the user exists.
+  // set up pagination: fetch notes and categories only after know the user exists.
   const FOLDER_PAGE_SIZE = 6;
 
+  // Fetch categories & notes (paralel)
   const [categories, initialNotes] = await Promise.all([
     getCategoriesForUser({ userId: id }),
     getNotesForUser({ userId: id, page: 0, pageSize: 10, search: "" }),
   ]);
 
+  // Normalize data categories
   const shellCategories = categories.map((c) => ({
     id: c.id,
     name: c.name,
@@ -48,7 +53,7 @@ export default async function AdminUserDetailPage({
     total_notes: Number(c.total_notes ?? 0),
   }));
 
-  // empty data state is handled separately from "User not found".
+  // empty data state 
   const showNoData = initialNotes.data.length === 0 && categories.length === 0;
 
   return (

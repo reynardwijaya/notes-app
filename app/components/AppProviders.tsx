@@ -5,7 +5,6 @@ import { appTheme } from "@/app/theme";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-
 // global wrapper: behavior & system global
 export function AppProviders({ children }: { children: React.ReactNode }) {
   return (

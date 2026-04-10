@@ -37,7 +37,6 @@ export async function getCategoriesPaginated(params: {
 
   const typedData = (data ?? []) as CategoryRow[];
 
-  // ambil total terpisah
   const { data: totalData, error: totalError } = await supabase.rpc(
     "get_categories_total",
   );

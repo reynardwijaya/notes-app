@@ -1,4 +1,3 @@
-/** Tailwind semantic tokens — colors live in tailwind.config.js */
 export const CATEGORY_STYLES = [
   {
     bg: "!bg-category-blue-bg",

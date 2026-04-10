@@ -1,16 +1,20 @@
+"use server";
+
 import { createClient } from "@/lib/supabase/server";
-import type { 
-  AdminTotals, 
-  MostActiveUser, 
+import type {
+  AdminTotals,
+  MostActiveUser,
   AdminUserSummary,
-  AdminDashboardData 
+  AdminDashboardData,
 } from "./types";
 import { requireAdmin } from "./guards";
 
+// cek value apakah object, tdk null
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value != null && typeof value === "object" && !Array.isArray(value);
 }
 
+// kalau tipe salah → fallback default
 function safeGetNumber(data: Record<string, unknown>, key: string): number {
   const value = data[key];
   return typeof value === "number" ? value : 0;
@@ -22,10 +26,10 @@ function safeGetString(data: Record<string, unknown>, key: string): string {
 }
 
 function parseAdminTotals(value: unknown): AdminTotals {
-  const fallback: AdminTotals = { total_users: 0, total_notes: 0 };
-  
-  if (!isRecord(value)) return fallback;
-  
+  const fallback: AdminTotals = { total_users: 0, total_notes: 0 }; // fallback default
+
+  if (!isRecord(value)) return fallback; // type validation
+
   return {
     total_users: safeGetNumber(value, "total_users"),
     total_notes: safeGetNumber(value, "total_notes"),
@@ -33,7 +37,7 @@ function parseAdminTotals(value: unknown): AdminTotals {
 }
 
 function parseMostActiveUser(value: unknown): MostActiveUser | null {
-  if (value === null || !isRecord(value)) return null;
+  if (value === null || !isRecord(value)) return null; // Data tidak valid → langsung null
 
   const data = value as Record<string, unknown>;
   const id = safeGetString(data, "id");
@@ -74,7 +78,7 @@ function parseAdminUserSummary(value: unknown): AdminUserSummary {
 
 function parseUsersArray(value: unknown): AdminUserSummary[] {
   if (!Array.isArray(value)) return [];
-  
+
   return value
     .filter(isRecord)
     .map(parseAdminUserSummary)
@@ -87,8 +91,6 @@ interface SupabaseRpcResponse {
 }
 
 export async function getAdminDashboardData(): Promise<AdminDashboardData> {
-  "use server";
-
   try {
     const gate = await requireAdmin();
     if (!gate.ok) {
@@ -97,18 +99,19 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
 
     const supabase = await createClient();
 
-    // ✅ CORRECT Promise.all typing - single generic
-    const responses = await Promise.all<SupabaseRpcResponse>([
+    //  Promise.all typing - single generic
+    const responses = (await Promise.all<SupabaseRpcResponse>([
       supabase.rpc("get_admin_totals"),
       supabase.rpc("get_most_active_user"),
-      supabase.rpc("get_admin_users")
-    ]) as SupabaseRpcResponse[];
+      supabase.rpc("get_admin_users"),
+    ])) as SupabaseRpcResponse[];
 
     const [totalsResponse, mostActiveResponse, usersResponse] = responses;
 
     // Error checking
     if (totalsResponse.error) throw new Error(totalsResponse.error.message);
-    if (mostActiveResponse.error) throw new Error(mostActiveResponse.error.message);
+    if (mostActiveResponse.error)
+      throw new Error(mostActiveResponse.error.message);
     if (usersResponse.error) throw new Error(usersResponse.error.message);
 
     // Safe data access
