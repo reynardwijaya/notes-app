@@ -3,22 +3,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { CategoryRow } from "./types";
 
-export async function getCategories(): Promise<CategoryRow[]> {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase.rpc("get_categories");
-
-  if (error) throw new Error(error.message);
-
-  const typedData = (data ?? []) as CategoryRow[];
-
-  return typedData.map((row) => ({
-    id: row.id,
-    name: row.name ?? "",
-    created_at: row.created_at ?? "",
-    total_notes: Number(row.total_notes ?? 0),
-  }));
-}
 export async function getCategoriesPaginated(params: {
   page: number;
   pageSize: number;
@@ -35,13 +19,7 @@ export async function getCategoriesPaginated(params: {
 
   if (error) throw new Error(error.message);
 
-  const typedData = (data ?? []) as CategoryRow[];
-
-  const { data: totalData, error: totalError } = await supabase.rpc(
-    "get_categories_total",
-  );
-
-  if (totalError) throw new Error(totalError.message);
+  const typedData = (data ?? []) as (CategoryRow & { total_count: number })[];
 
   return {
     data: typedData.map((row) => ({
@@ -50,6 +28,6 @@ export async function getCategoriesPaginated(params: {
       created_at: row.created_at ?? "",
       total_notes: Number(row.total_notes ?? 0),
     })),
-    total: Number(totalData ?? 0),
+    total: typedData.length > 0 ? Number(typedData[0].total_count) : 0,
   };
 }

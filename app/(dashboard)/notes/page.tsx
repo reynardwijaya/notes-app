@@ -1,9 +1,6 @@
 import AppLayout from "@/app/components/layout/AppLayout";
 import { getNotes } from "@/app/(dashboard)/notes/utils/getNotes";
-import {
-  getCategories,
-  getCategoriesPaginated,
-} from "@/app/(dashboard)/categories/utils/getCategories";
+import { getCategoriesPaginated } from "@/app/(dashboard)/categories/utils/getCategories";
 import { createClient } from "@/lib/supabase/server";
 import NotesDashboardShell from "@/app/(dashboard)/notes/components/NotesDashboardShell";
 
@@ -28,13 +25,12 @@ export default async function NotesPage() {
 
   const FOLDER_PAGE_SIZE = 6;
 
-  const [{ data, total }, folderPage, allCategories] = await Promise.all([
+  const [{ data, total }, folderPage] = await Promise.all([
     getNotes({ page: 0, pageSize: 10, search: "" }),
     getCategoriesPaginated({ page: 0, pageSize: FOLDER_PAGE_SIZE }),
-    getCategories(),
   ]);
 
-  const categoriesForForms = allCategories.map((c) => ({
+  const categoriesForForms = folderPage.data.map((c) => ({
     id: c.id,
     name: c.name,
   }));
