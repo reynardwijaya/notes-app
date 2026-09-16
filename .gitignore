@@ -37,6 +37,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# internal technical docs (lives in the Reynard-Documentation repo instead)
+documentation.md
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
