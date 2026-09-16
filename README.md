@@ -1,6 +1,6 @@
 # 📝 Notes App
 
-Aplikasi pencatatan pribadi yang bikin catatanmu tetap rapi, tercari, dan gampang dikelola — bukan cuma tumpukan teks di aplikasi notes biasa. Dilengkapi kategori berwarna dan dashboard admin buat yang perlu kontrol lebih atas seluruh data pengguna.
+Aplikasi pencatatan pribadi yang bikin catatanmu tetap rapi, tercari, dan gampang dikelola. Dilengkapi kategori berwarna dan dashboard admin buat yang perlu kontrol lebih atas seluruh data pengguna.
 
 - 🗂️ Kelompokkan catatan pakai kategori berwarna biar sekali lihat langsung kebaca
 - 🔍 Cari, filter (rentang tanggal & kategori), dan urutkan catatan dalam sekejap
