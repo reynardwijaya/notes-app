@@ -20,14 +20,14 @@ import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import CloseIcon from "@mui/icons-material/Close";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import InboxOutlinedIcon from "@mui/icons-material/InboxOutlined";
-import { getCategoriesPaginated } from "@/app/(dashboard)/categories/utils/getCategories";
+import { getCategoriesPaginated } from "@/app/(dashboard)/categories/actions/getCategories";
 
 import type { NoteCategory } from "@/app/(dashboard)/notes/utils/types";
 import NotesDataTable from "@/app/(dashboard)/notes/components/NotesDataTable";
 import { buildCategoryColorIndex } from "@/lib/categoryColorMap";
 import { getCategoryStyle } from "@/lib/categoryStyle";
 import ConfirmationModal from "@/app/components/ConfirmationModal";
-import { deleteCategory } from "@/app/(dashboard)/categories/utils/deleteCategory";
+import { deleteCategory } from "@/app/(dashboard)/categories/actions/deleteCategory";
 
 type CategoryWithMeta = NoteCategory & {
   created_at?: string;

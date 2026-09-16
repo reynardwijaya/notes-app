@@ -1,7 +1,7 @@
 "use client";
 
 import { TextField, Button, Box } from "@mui/material";
-import { useRegister } from "../action/useRegister";
+import { useRegister } from "../hooks/useRegister";
 
 export default function RegisterForm() {
   const {

@@ -34,10 +34,10 @@ import CloseIcon from "@mui/icons-material/Close";
 import CategoryOutlinedIcon from "@mui/icons-material/CategoryOutlined";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 
-import { getNotes } from "@/app/(dashboard)/notes/utils/getNotes";
-import { getNotesForUser } from "@/app/(dashboard)/admin/utils/getNotesForUser";
-import { deleteNote } from "@/app/(dashboard)/notes/utils/deleteNote";
-import { updateNote } from "@/app/(dashboard)/notes/utils/updateNote";
+import { getNotes } from "@/app/(dashboard)/notes/actions/getNotes";
+import { getNotesForUser } from "@/app/(dashboard)/admin/actions/getNotesForUser";
+import { deleteNote } from "@/app/(dashboard)/notes/actions/deleteNote";
+import { updateNote } from "@/app/(dashboard)/notes/actions/updateNote";
 import type {
   NoteWithCategory,
   NoteCategory,

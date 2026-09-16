@@ -1,6 +1,6 @@
 "use server";
 
-import { requireAdmin } from "@/app/(dashboard)/admin/utils/guards";
+import { requireAdmin } from "@/app/(dashboard)/admin/actions/guards";
 import { mapNoteRow } from "@/app/(dashboard)/notes/utils/supabaseMappers";
 import type { NoteWithCategory } from "@/app/(dashboard)/notes/utils/types";
 

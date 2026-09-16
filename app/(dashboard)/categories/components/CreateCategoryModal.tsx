@@ -14,9 +14,9 @@ import {
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 
-import { createCategory } from "@/app/(dashboard)/categories/utils/createCategory";
-import { deleteCategory } from "@/app/(dashboard)/categories/utils/deleteCategory";
-import { getCategoryUsage } from "@/app/(dashboard)/categories/utils/getCategoryUsage";
+import { createCategory } from "@/app/(dashboard)/categories/actions/createCategory";
+import { deleteCategory } from "@/app/(dashboard)/categories/actions/deleteCategory";
+import { getCategoryUsage } from "@/app/(dashboard)/categories/actions/getCategoryUsage";
 import ConfirmationModal from "@/app/components/ConfirmationModal";
 import type { NoteCategory } from "@/app/(dashboard)/notes/utils/types";
 import { buildCategoryColorIndex } from "@/lib/categoryColorMap";

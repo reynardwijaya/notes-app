@@ -1,6 +1,6 @@
 import AppLayout from "@/app/components/layout/AppLayout";
 import { createClient } from "@/lib/supabase/server";
-import { getAdminDashboardData } from "./utils/getDashboard";
+import { getAdminDashboardData } from "./actions/getDashboard";
 import DashboardContent from "./components/DashboardContent";
 
 export default async function AdminDashboardPage() {

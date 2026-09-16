@@ -1,9 +1,9 @@
 import AppLayout from "@/app/components/layout/AppLayout";
 import NotesDashboardShell from "@/app/(dashboard)/notes/components/NotesDashboardShell";
 import { createClient } from "@/lib/supabase/server";
-import { getUserOverview } from "@/app/(dashboard)/admin/utils/getUserOverview";
-import { getNotesForUser } from "@/app/(dashboard)/admin/utils/getNotesForUser";
-import { getCategoriesForUser } from "@/app/(dashboard)/admin/utils/getCategoriesForUser";
+import { getUserOverview } from "@/app/(dashboard)/admin/actions/getUserOverview";
+import { getNotesForUser } from "@/app/(dashboard)/admin/actions/getNotesForUser";
+import { getCategoriesForUser } from "@/app/(dashboard)/admin/actions/getCategoriesForUser";
 import NoDataAvailableDialog from "@/app/(dashboard)/admin/components/NoDataAvailableDialog";
 import AdminUserDetailHeader from "@/app/(dashboard)/admin/components/AdminUserDetailHeader";
 import { Box, Stack, Typography } from "@mui/material";

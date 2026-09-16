@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import type {
   CategoryUsageRow,
   CategoryUsageResult,
-} from "./types";
+} from "../utils/types";
 
 export async function getCategoryUsage(input: {
   id: string;

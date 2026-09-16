@@ -1,6 +1,6 @@
 "use client";
 
-import { logout } from "@/app/action/logout";
+import { logout } from "@/app/actions/logout";
 import { Avatar, Box, Button, Stack } from "@mui/material";
 import { useTransition } from "react";
 

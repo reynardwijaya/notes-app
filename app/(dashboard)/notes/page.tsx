@@ -1,6 +1,6 @@
 import AppLayout from "@/app/components/layout/AppLayout";
-import { getNotes } from "@/app/(dashboard)/notes/utils/getNotes";
-import { getCategoriesPaginated } from "@/app/(dashboard)/categories/utils/getCategories";
+import { getNotes } from "@/app/(dashboard)/notes/actions/getNotes";
+import { getCategoriesPaginated } from "@/app/(dashboard)/categories/actions/getCategories";
 import { createClient } from "@/lib/supabase/server";
 import NotesDashboardShell from "@/app/(dashboard)/notes/components/NotesDashboardShell";
 

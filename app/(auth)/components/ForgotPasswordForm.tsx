@@ -1,7 +1,7 @@
 "use client";
 
 import { TextField, Button, Box, CircularProgress } from "@mui/material";
-import { useForgotPassword } from "../action/useForgotPassword";
+import { useForgotPassword } from "../hooks/useForgotPassword";
 
 export default function ForgotPasswordForm() {
   const { email, setEmail, handleReset, loading } = useForgotPassword();

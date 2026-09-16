@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { CategoryRow } from "./types";
+import { CategoryRow } from "../utils/types";
 
 export async function getCategoriesPaginated(params: {
   page: number;

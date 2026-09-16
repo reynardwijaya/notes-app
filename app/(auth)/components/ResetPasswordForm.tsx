@@ -1,7 +1,7 @@
 "use client";
 
 import { Box, Button, CircularProgress, TextField } from "@mui/material";
-import { useResetPassword } from "../action/useResetPassword";
+import { useResetPassword } from "../hooks/useResetPassword";
 
 export default function ResetPasswordForm() {
   const {

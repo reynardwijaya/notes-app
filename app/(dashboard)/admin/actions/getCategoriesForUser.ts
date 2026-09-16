@@ -1,6 +1,6 @@
 "use server";
 
-import { requireAdmin } from "@/app/(dashboard)/admin/utils/guards";
+import { requireAdmin } from "@/app/(dashboard)/admin/actions/guards";
 
 export type AdminCategoryRow = {
   id: string;

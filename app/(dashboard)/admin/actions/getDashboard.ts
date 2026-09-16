@@ -6,7 +6,7 @@ import type {
   MostActiveUser,
   AdminUserSummary,
   AdminDashboardData,
-} from "./types";
+} from "../utils/types";
 import { requireAdmin } from "./guards";
 
 // cek value apakah object, tdk null
